@@ -1,6 +1,6 @@
 services:
   backend:
-    image: ghcr.io/LeonMusCoden/letterfeed-backend:latest
+    image: ghcr.io/leonmuscoden/letterfeed-backend:latest
     restart: unless-stopped
     env_file:
       - .env
@@ -10,7 +10,7 @@ services:
       - letterfeed_network
 
   frontend:
-    image: ghcr.io/LeonMusCoden/letterfeed-frontend:latest
+    image: ghcr.io/leonmuscoden/letterfeed-frontend:latest
     restart: unless-stopped
     ports:
       - "3000:3000"
