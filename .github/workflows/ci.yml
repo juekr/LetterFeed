@@ -65,7 +65,7 @@ jobs:
       - name: Build and publish a Docker image for backend
         uses: macbre/push-to-ghcr@master
         with:
-          image_name: letterfeed-backend
+          image_name: LeonMusCoden/letterfeed-backend
           github_token: ${{ secrets.GITHUB_TOKEN }}
           dockerfile: backend/Dockerfile
           context: backend/
@@ -81,7 +81,7 @@ jobs:
       - name: Build and publish a Docker image for frontend
         uses: macbre/push-to-ghcr@master
         with:
-          image_name: letterfeed-frontend
+          image_name: LeonMusCoden/letterfeed-frontend
           github_token: ${{ secrets.GITHUB_TOKEN }}
           dockerfile: frontend/Dockerfile
           context: frontend/
