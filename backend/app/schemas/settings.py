@@ -5,6 +5,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 class SettingsBase(BaseModel):
     """Base schema for application settings."""
+
     imap_server: str
     imap_username: str
     search_folder: str = "INBOX"
@@ -16,11 +17,13 @@ class SettingsBase(BaseModel):
 
 class SettingsCreate(SettingsBase):
     """Schema for creating or updating settings, including the IMAP password."""
+
     imap_password: str
 
 
 class Settings(SettingsBase):
     """Schema for retrieving settings, with password excluded by default."""
+
     id: int
     imap_password: str | None = Field(None, exclude=True)
     locked_fields: List[str] = []

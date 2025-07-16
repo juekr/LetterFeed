@@ -28,7 +28,7 @@ LetterFeed is a self-hosted application that converts email newsletters into RSS
     cp .env.example .env
     ```
 
-    Edit the `.env` file with your specific settings. 
+    Edit the `.env` file with your specific settings.
 
 3.  **Build and run the Docker containers:**
 
@@ -134,4 +134,3 @@ cd backend
 uv sync --group test
 uvicorn app.main:app --reload
 ```
-

@@ -6,6 +6,7 @@ from app.core.database import Base
 
 class Newsletter(Base):
     """Represents a newsletter, which can have multiple senders and entries."""
+
     __tablename__ = "newsletters"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -22,6 +23,7 @@ class Newsletter(Base):
 
 class Sender(Base):
     """Represents an email sender associated with a newsletter."""
+
     __tablename__ = "senders"
 
     id = Column(Integer, primary_key=True, index=True)

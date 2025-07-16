@@ -28,4 +28,4 @@ volumes:
 
 networks:
   letterfeed_network:
-    driver: bridge 
+    driver: bridge

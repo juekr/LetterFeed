@@ -151,4 +151,3 @@ export async function processEmails(): Promise<{ message: string }> {
 export function getFeedUrl(newsletterId: number): string {
     return `${API_BASE_URL}/feeds/${newsletterId}`;
 }
-

@@ -5,6 +5,7 @@ from app.core.database import Base
 
 class Settings(Base):
     """Represents application settings, including IMAP configuration."""
+
     __tablename__ = "settings"
 
     id = Column(Integer, primary_key=True, index=True)
