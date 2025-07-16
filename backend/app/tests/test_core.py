@@ -70,7 +70,7 @@ def test_process_emails(mock_imap, db_session: Session):
     mock_mail.search.return_value = ("OK", [b"1"])
 
     # Mock email content
-    mock_msg_bytes = b"From: newsletter@example.com\nSubject: Test Subject\n\nTest Body"
+    mock_msg_bytes = b"From: newsletter@example.com\nSubject: Test Subject\nMessage-ID: <test@test.com>\n\nTest Body"
     mock_mail.fetch.return_value = ("OK", [(None, mock_msg_bytes)])
 
     process_emails(db_session)
@@ -151,7 +151,7 @@ def test_process_emails_auto_add_sender(mock_imap, db_session: Session):
     mock_mail = MagicMock()
     mock_imap.return_value = mock_mail
     mock_mail.search.return_value = ("OK", [b"1"])
-    mock_msg_bytes = b"From: New Sender <new@example.com>\nSubject: New Email\n\nHello"
+    mock_msg_bytes = b"From: New Sender <new@example.com>\nSubject: New Email\nMessage-ID: <new@new.com>\n\nHello"
     mock_mail.fetch.return_value = ("OK", [(None, mock_msg_bytes)])
 
     process_emails(db_session)
@@ -192,10 +192,55 @@ def test_process_emails_no_move_or_read(mock_imap, db_session: Session):
     mock_mail = MagicMock()
     mock_imap.return_value = mock_mail
     mock_mail.search.return_value = ("OK", [b"1"])
-    mock_msg_bytes = b"From: newsletter@example.com\nSubject: Test Subject\n\nTest Body"
+    mock_msg_bytes = b"From: newsletter@example.com\nSubject: Test Subject\nMessage-ID: <test@test.com>\n\nTest Body"
     mock_mail.fetch.return_value = ("OK", [(None, mock_msg_bytes)])
 
     process_emails(db_session)
 
     mock_mail.store.assert_not_called()
     mock_mail.copy.assert_not_called()
+
+
+@patch("app.services.email_processor.imaplib.IMAP4_SSL")
+def test_process_emails_avoids_duplicates(mock_imap, db_session: Session):
+    """Test that process_emails avoids processing duplicate emails."""
+    settings_data = SettingsCreate(
+        imap_server="imap.test.com",
+        imap_username="test@test.com",
+        imap_password="password",
+    )
+    create_or_update_settings(db_session, settings_data)
+    newsletter_data = NewsletterCreate(
+        name="Test Newsletter", sender_emails=["newsletter@example.com"]
+    )
+    newsletter = create_newsletter(db_session, newsletter_data)
+
+    # Create an entry that already exists
+    from app.crud.entries import create_entry
+    from app.schemas.entries import EntryCreate
+
+    create_entry(
+        db_session,
+        EntryCreate(
+            subject="Existing Subject",
+            body="Existing Body",
+            message_id="<existing@message.com>",
+        ),
+        newsletter.id,
+    )
+
+    mock_mail = MagicMock()
+    mock_imap.return_value = mock_mail
+    mock_mail.search.return_value = ("OK", [b"1"])
+    # This email has the same Message-ID as the one we just created
+    mock_msg_bytes = b"From: newsletter@example.com\nSubject: Test Subject\nMessage-ID: <existing@message.com>\n\nTest Body"
+    mock_mail.fetch.return_value = ("OK", [(None, mock_msg_bytes)])
+
+    process_emails(db_session)
+
+    # Verify that no new entry was created
+    from app.crud.entries import get_entries_by_newsletter
+
+    entries = get_entries_by_newsletter(db_session, newsletter.id)
+    assert len(entries) == 1
+    assert entries[0].subject == "Existing Subject"

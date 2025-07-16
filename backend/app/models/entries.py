@@ -8,6 +8,7 @@ from app.core.database import Base
 
 class Entry(Base):
     """Represents an entry (e.g., an email) associated with a newsletter."""
+
     __tablename__ = "entries"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -17,5 +18,6 @@ class Entry(Base):
     received_at = Column(
         DateTime(timezone=True), default=datetime.datetime.now(datetime.UTC)
     )
+    message_id = Column(String, unique=True, index=True, nullable=False)
 
     newsletter = relationship("Newsletter", back_populates="entries")

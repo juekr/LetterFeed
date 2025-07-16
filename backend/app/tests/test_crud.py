@@ -148,7 +148,11 @@ def test_create_entry(db_session: Session):
         name="Test Newsletter 5", sender_emails=[unique_email]
     )
     newsletter = create_newsletter(db_session, newsletter_data)
-    entry_data = EntryCreate(subject="Test Subject", body="Test Body")
+    entry_data = EntryCreate(
+        subject="Test Subject",
+        body="Test Body",
+        message_id=f"<{uuid.uuid4()}@test.com>",
+    )
     entry = create_entry(db_session, entry_data, newsletter.id)
     assert entry.subject == "Test Subject"
     assert entry.newsletter_id == newsletter.id
@@ -162,10 +166,18 @@ def test_get_entries_by_newsletter(db_session: Session):
     )
     newsletter = create_newsletter(db_session, newsletter_data)
     create_entry(
-        db_session, EntryCreate(subject="Entry 1", body="Body 1"), newsletter.id
+        db_session,
+        EntryCreate(
+            subject="Entry 1", body="Body 1", message_id=f"<{uuid.uuid4()}@test.com>"
+        ),
+        newsletter.id,
     )
     create_entry(
-        db_session, EntryCreate(subject="Entry 2", body="Body 2"), newsletter.id
+        db_session,
+        EntryCreate(
+            subject="Entry 2", body="Body 2", message_id=f"<{uuid.uuid4()}@test.com>"
+        ),
+        newsletter.id,
     )
     entries = get_entries_by_newsletter(db_session, newsletter.id)
     assert len(entries) == 2
@@ -183,9 +195,14 @@ def test_update_newsletter(db_session: Session):
     from app.schemas.newsletters import NewsletterUpdate
 
     updated_email = f"updated_sender_{uuid.uuid4()}@test.com"
-    updated_newsletter_data = NewsletterUpdate(name="Updated Newsletter", sender_emails=[updated_email])
+    updated_newsletter_data = NewsletterUpdate(
+        name="Updated Newsletter", sender_emails=[updated_email]
+    )
     from app.crud.newsletters import update_newsletter
-    updated_newsletter = update_newsletter(db_session, newsletter.id, updated_newsletter_data)
+
+    updated_newsletter = update_newsletter(
+        db_session, newsletter.id, updated_newsletter_data
+    )
 
     assert updated_newsletter.name == "Updated Newsletter"
     assert len(updated_newsletter.senders) == 1
@@ -201,6 +218,7 @@ def test_delete_newsletter(db_session: Session):
     newsletter = create_newsletter(db_session, newsletter_data)
 
     from app.crud.newsletters import delete_newsletter
+
     deleted_newsletter = delete_newsletter(db_session, newsletter.id)
 
     assert deleted_newsletter.id == newsletter.id
@@ -208,4 +226,5 @@ def test_delete_newsletter(db_session: Session):
 
     # Verify it's actually deleted
     from app.crud.newsletters import get_newsletter
+
     assert get_newsletter(db_session, newsletter.id) is None

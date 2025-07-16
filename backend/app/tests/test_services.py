@@ -1,3 +1,5 @@
+import uuid
+
 from sqlalchemy.orm import Session
 
 from app.crud.entries import create_entry
@@ -17,12 +19,16 @@ def test_generate_feed(db_session: Session):
 
     # Create entries for the newsletter
     entry1_data = EntryCreate(
-        subject="First Entry", body="<p>This is the first entry.</p>"
+        subject="First Entry",
+        body="<p>This is the first entry.</p>",
+        message_id=f"<{uuid.uuid4()}@test.com>",
     )
     create_entry(db_session, entry1_data, newsletter.id)
 
     entry2_data = EntryCreate(
-        subject="Second Entry", body="<p>This is the second entry.</p>"
+        subject="Second Entry",
+        body="<p>This is the second entry.</p>",
+        message_id=f"<{uuid.uuid4()}@test.com>",
     )
     create_entry(db_session, entry2_data, newsletter.id)
 

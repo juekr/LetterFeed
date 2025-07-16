@@ -164,9 +164,17 @@ def test_get_newsletter_feed(client: TestClient):
     newsletter_id = create_response.json()["id"]
 
     # Add some entries to the newsletter
-    entry_data_1 = {"subject": "Test Entry 1", "body": "<p>Content 1</p>"}
+    entry_data_1 = {
+        "subject": "Test Entry 1",
+        "body": "<p>Content 1</p>",
+        "message_id": f"<entry1_{uuid.uuid4()}@test.com>",
+    }
     client.post(f"/newsletters/{newsletter_id}/entries", json=entry_data_1)
-    entry_data_2 = {"subject": "Test Entry 2", "body": "<p>Content 2</p>"}
+    entry_data_2 = {
+        "subject": "Test Entry 2",
+        "body": "<p>Content 2</p>",
+        "message_id": f"<entry2_{uuid.uuid4()}@test.com>",
+    }
     client.post(f"/newsletters/{newsletter_id}/entries", json=entry_data_2)
 
     response = client.get(f"/feeds/{newsletter_id}")

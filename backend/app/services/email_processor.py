@@ -4,7 +4,7 @@ import imaplib
 from sqlalchemy.orm import Session
 
 from app.core.logging import get_logger
-from app.crud.entries import create_entry
+from app.crud.entries import create_entry, get_entry_by_message_id
 from app.crud.newsletters import create_newsletter, get_newsletters
 from app.crud.settings import get_settings
 from app.schemas.entries import EntryCreate
@@ -56,6 +56,20 @@ def process_emails(db: Session):
 
             msg = email.message_from_bytes(data[0][1])
             sender = email.utils.parseaddr(msg["From"])[1]
+            message_id = msg.get("Message-ID")
+
+            if not message_id:
+                logger.warning(
+                    f"Email from {sender} with subject '{msg['Subject']}' has no Message-ID, skipping."
+                )
+                continue
+
+            if get_entry_by_message_id(db, message_id):
+                logger.info(
+                    f"Email with Message-ID {message_id} already processed, skipping."
+                )
+                continue
+
             logger.debug(
                 f"Processing email from {sender} with subject '{msg['Subject']}'"
             )
@@ -100,7 +114,9 @@ def process_emails(db: Session):
 
                 final_body = html or body
 
-                entry = EntryCreate(subject=subject, body=final_body)
+                entry = EntryCreate(
+                    subject=subject, body=final_body, message_id=message_id
+                )
                 create_entry(db, entry, newsletter.id)
                 logger.info(
                     f"Created new entry for newsletter '{newsletter.name}' from sender {sender}"

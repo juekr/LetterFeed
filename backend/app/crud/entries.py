@@ -23,6 +23,12 @@ def get_entries_by_newsletter(
     )
 
 
+def get_entry_by_message_id(db: Session, message_id: str):
+    """Retrieve an entry by its message_id."""
+    logger.debug(f"Querying for entry with message_id={message_id}")
+    return db.query(Entry).filter(Entry.message_id == message_id).first()
+
+
 def create_entry(db: Session, entry: EntryCreate, newsletter_id: int):
     """Create a new entry for a newsletter."""
     logger.info(
