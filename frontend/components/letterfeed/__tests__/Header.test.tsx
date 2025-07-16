@@ -1,30 +1,120 @@
-import React from "react"
-import { render, screen, fireEvent } from "@testing-library/react"
-import "@testing-library/jest-dom"
+import { render, screen, fireEvent, waitFor } from "@testing-library/react"
 import { Header } from "../Header"
+import { Toaster } from "@/components/ui/sonner"
+import { toast } from "sonner"
+import * as api from "@/lib/api"
+
+jest.mock("@/lib/api")
+const mockedApi = api as jest.Mocked<typeof api>
+
+// Mock the toast functions
+jest.mock("sonner", () => {
+  const original = jest.requireActual("sonner")
+  return {
+    ...original,
+    toast: {
+      success: jest.fn(),
+      error: jest.fn(),
+    },
+  }
+})
 
 describe("Header", () => {
-  it("renders the title and description", () => {
-    render(<Header onOpenAddNewsletter={() => {}} onOpenSettings={() => {}} />)
+  const onOpenAddNewsletter = jest.fn()
+  const onOpenSettings = jest.fn()
+  const consoleError = jest.spyOn(console, "error").mockImplementation(() => {})
+
+  beforeEach(() => {
+    jest.clearAllMocks()
+    consoleError.mockClear()
+  })
+
+  afterAll(() => {
+    consoleError.mockRestore()
+  })
+
+  it("renders the header with title and buttons", () => {
+    render(
+      <Header
+        onOpenAddNewsletter={onOpenAddNewsletter}
+        onOpenSettings={onOpenSettings}
+      />
+    )
     expect(screen.getByText("LetterFeed")).toBeInTheDocument()
-    expect(screen.getByText("Read your newsletters as RSS feeds!")).toBeInTheDocument()
+    expect(screen.getByText("Add Newsletter")).toBeInTheDocument()
+    expect(screen.getByText("Settings")).toBeInTheDocument()
+    expect(screen.getByText("Process Now")).toBeInTheDocument()
   })
 
   it('calls onOpenAddNewsletter when "Add Newsletter" button is clicked', () => {
-    const handleOpenAdd = jest.fn()
-    render(<Header onOpenAddNewsletter={handleOpenAdd} onOpenSettings={() => {}} />)
-
-    const addButton = screen.getByRole("button", { name: /Add Newsletter/i })
-    fireEvent.click(addButton)
-    expect(handleOpenAdd).toHaveBeenCalledTimes(1)
+    render(
+      <Header
+        onOpenAddNewsletter={onOpenAddNewsletter}
+        onOpenSettings={onOpenSettings}
+      />
+    )
+    fireEvent.click(screen.getByText("Add Newsletter"))
+    expect(onOpenAddNewsletter).toHaveBeenCalledTimes(1)
   })
 
   it('calls onOpenSettings when "Settings" button is clicked', () => {
-    const handleOpenSettings = jest.fn()
-    render(<Header onOpenAddNewsletter={() => {}} onOpenSettings={handleOpenSettings} />)
+    render(
+      <Header
+        onOpenAddNewsletter={onOpenAddNewsletter}
+        onOpenSettings={onOpenSettings}
+      />
+    )
+    fireEvent.click(screen.getByText("Settings"))
+    expect(onOpenSettings).toHaveBeenCalledTimes(1)
+  })
 
-    const settingsButton = screen.getByRole("button", { name: /Settings/i })
-    fireEvent.click(settingsButton)
-    expect(handleOpenSettings).toHaveBeenCalledTimes(1)
+  it('calls the process emails API when "Process Now" button is clicked and shows success toast', async () => {
+    mockedApi.processEmails.mockResolvedValue({ message: "Success" })
+
+    render(
+      <>
+        <Header
+          onOpenAddNewsletter={onOpenAddNewsletter}
+          onOpenSettings={onOpenSettings}
+        />
+        <Toaster />
+      </>
+    )
+
+    fireEvent.click(screen.getByText("Process Now"))
+
+    await waitFor(() => {
+      expect(api.processEmails).toHaveBeenCalledTimes(1)
+    })
+
+    await waitFor(() => {
+      expect(toast.success).toHaveBeenCalledWith(
+        "Email processing started successfully!"
+      )
+    })
+  })
+
+  it("shows an error toast if the process emails API call fails", async () => {
+    mockedApi.processEmails.mockRejectedValue(new Error("Failed to process"))
+
+    render(
+      <>
+        <Header
+          onOpenAddNewsletter={onOpenAddNewsletter}
+          onOpenSettings={onOpenSettings}
+        />
+        <Toaster />
+      </>
+    )
+
+    fireEvent.click(screen.getByText("Process Now"))
+
+    await waitFor(() => {
+      expect(api.processEmails).toHaveBeenCalledTimes(1)
+    })
+
+    await waitFor(() => {
+      expect(toast.error).toHaveBeenCalledWith("Failed to process")
+    })
   })
 })

@@ -102,6 +102,15 @@ def test_get_imap_folders(mock_imap, client: TestClient):
     assert response.json() == ["INBOX", "Processed"]
 
 
+@patch("app.routers.imap.process_emails")
+def test_trigger_email_processing(mock_process_emails, client: TestClient):
+    """Test triggering email processing manually."""
+    response = client.post("/imap/process")
+    assert response.status_code == 200
+    assert response.json() == {"message": "Email processing triggered successfully."}
+    mock_process_emails.assert_called_once()
+
+
 def test_create_newsletter(client: TestClient):
     """Test creating a newsletter."""
     unique_email = f"newsletter_{uuid.uuid4()}@example.com"

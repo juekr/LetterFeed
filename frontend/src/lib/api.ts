@@ -137,6 +137,18 @@ export async function testImapConnection(): Promise<{ message: string }> {
     return response.json();
 }
 
+export async function processEmails(): Promise<{ message: string }> {
+    const response = await fetch(`${API_BASE_URL}/imap/process`, {
+        method: 'POST',
+    });
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detail || "Failed to process emails");
+    }
+    return response.json();
+}
+
 export function getFeedUrl(newsletterId: number): string {
     return `${API_BASE_URL}/feeds/${newsletterId}`;
 }
+

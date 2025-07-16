@@ -8,6 +8,7 @@ from app.core.imap import _test_imap_connection, get_folders
 from app.core.logging import get_logger
 from app.crud.settings import create_or_update_settings, get_settings
 from app.schemas.settings import Settings, SettingsCreate
+from app.services.email_processor import process_emails
 
 logger = get_logger(__name__)
 router = APIRouter()
@@ -71,3 +72,15 @@ def read_folders(db: Session = Depends(get_db)):
 
     logger.info(f"Found {len(folders)} IMAP folders")
     return folders
+
+
+@router.post("/imap/process")
+def trigger_email_processing(db: Session = Depends(get_db)):
+    """Trigger the email processing manually."""
+    logger.info("Request to manually trigger email processing")
+    try:
+        process_emails(db)
+        return {"message": "Email processing triggered successfully."}
+    except Exception as e:
+        logger.error(f"Error triggering email processing: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
