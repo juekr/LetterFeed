@@ -30,10 +30,10 @@ LetterFeed is a self-hosted application that converts email newsletters into RSS
 
     Edit the `.env` file with your specific settings.
 
-3.  **Build and run the Docker containers:**
+3.  **Run the Docker containers:**
 
     ```bash
-    docker compose up --build
+    make docker-up
     ```
 
 ### Behind a Reverse Proxy
@@ -115,22 +115,28 @@ networks:
 
 ## Development
 
-### Frontend (Next.js)
-
-To run the frontend in development mode:
+To run the application in development mode:
 
 ```bash
-cd frontend
-npm install
-npm run dev
+make dev
+# or to run the dev container
+make docker-dev-up
 ```
 
-### Backend (FastAPI)
-
-To run the backend in development mode:
+To install dependencies:
 
 ```bash
-cd backend
-uv sync --group test
-uvicorn app.main:app --reload
+make install
+```
+
+To run tests:
+
+```bash
+make test
+```
+
+To lint the code:
+
+```bash
+make lint
 ```
