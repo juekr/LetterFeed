@@ -145,3 +145,36 @@ def test_get_nonexistent_newsletter(client: TestClient):
     response = client.get("/newsletters/999")
     assert response.status_code == 404
     assert response.json() == {"detail": "Newsletter not found"}
+
+
+def test_get_newsletter_feed(client: TestClient):
+    """Test generating a newsletter feed."""
+    unique_email = f"feed_test_{uuid.uuid4()}@example.com"
+    newsletter_data = {"name": "Feed Test Newsletter", "sender_emails": [unique_email]}
+    create_response = client.post("/newsletters/", json=newsletter_data)
+    newsletter_id = create_response.json()["id"]
+
+    # Add some entries to the newsletter
+    entry_data_1 = {"subject": "Test Entry 1", "body": "<p>Content 1</p>"}
+    client.post(f"/newsletters/{newsletter_id}/entries", json=entry_data_1)
+    entry_data_2 = {"subject": "Test Entry 2", "body": "<p>Content 2</p>"}
+    client.post(f"/newsletters/{newsletter_id}/entries", json=entry_data_2)
+
+    response = client.get(f"/feeds/{newsletter_id}")
+    assert response.status_code == 200
+    assert "application/atom+xml" in response.headers["content-type"]
+    assert f"<title>Feed Test Newsletter</title>" in response.text
+    import xml.etree.ElementTree as ET
+    root = ET.fromstring(response.text)
+    # Atom feed uses a namespace, so we need to include it in our tag searches
+    ns = {'atom': 'http://www.w3.org/2005/Atom'}
+    entry_titles = [entry.find('atom:title', ns).text for entry in root.findall('atom:entry', ns)]
+    assert "Test Entry 1" in entry_titles
+    assert "Test Entry 2" in entry_titles
+
+
+def test_get_newsletter_feed_nonexistent_newsletter(client: TestClient):
+    """Test generating a feed for a nonexistent newsletter."""
+    response = client.get("/feeds/999")
+    assert response.status_code == 404
+    assert response.json() == {"detail": "Newsletter not found"}

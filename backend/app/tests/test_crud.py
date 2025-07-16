@@ -170,3 +170,42 @@ def test_get_entries_by_newsletter(db_session: Session):
     entries = get_entries_by_newsletter(db_session, newsletter.id)
     assert len(entries) == 2
     assert entries[0].subject == "Entry 1"
+
+
+def test_update_newsletter(db_session: Session):
+    """Test updating a newsletter."""
+    unique_email = f"sender_{uuid.uuid4()}@test.com"
+    newsletter_data = NewsletterCreate(
+        name="Newsletter to Update", sender_emails=[unique_email]
+    )
+    newsletter = create_newsletter(db_session, newsletter_data)
+
+    from app.schemas.newsletters import NewsletterUpdate
+
+    updated_email = f"updated_sender_{uuid.uuid4()}@test.com"
+    updated_newsletter_data = NewsletterUpdate(name="Updated Newsletter", sender_emails=[updated_email])
+    from app.crud.newsletters import update_newsletter
+    updated_newsletter = update_newsletter(db_session, newsletter.id, updated_newsletter_data)
+
+    assert updated_newsletter.name == "Updated Newsletter"
+    assert len(updated_newsletter.senders) == 1
+    assert updated_newsletter.senders[0].email == updated_email
+
+
+def test_delete_newsletter(db_session: Session):
+    """Test deleting a newsletter."""
+    unique_email = f"sender_{uuid.uuid4()}@test.com"
+    newsletter_data = NewsletterCreate(
+        name="Newsletter to Delete", sender_emails=[unique_email]
+    )
+    newsletter = create_newsletter(db_session, newsletter_data)
+
+    from app.crud.newsletters import delete_newsletter
+    deleted_newsletter = delete_newsletter(db_session, newsletter.id)
+
+    assert deleted_newsletter.id == newsletter.id
+    assert deleted_newsletter.name == "Newsletter to Delete"
+
+    # Verify it's actually deleted
+    from app.crud.newsletters import get_newsletter
+    assert get_newsletter(db_session, newsletter.id) is None

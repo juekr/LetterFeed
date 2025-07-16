@@ -13,6 +13,8 @@ from app.crud.newsletters import (
     update_newsletter,
 )
 from app.schemas.newsletters import Newsletter, NewsletterCreate, NewsletterUpdate
+from app.schemas.entries import Entry, EntryCreate
+from app.crud.entries import create_entry
 
 logger = get_logger(__name__)
 router = APIRouter()
@@ -70,3 +72,16 @@ def delete_existing_newsletter(newsletter_id: int, db: Session = Depends(get_db)
         logger.warning(f"Newsletter with id={newsletter_id} not found, cannot delete")
         raise HTTPException(status_code=404, detail="Newsletter not found")
     return db_newsletter
+
+
+@router.post("/newsletters/{newsletter_id}/entries", response_model=Entry)
+def create_newsletter_entry(
+    newsletter_id: int, entry: EntryCreate, db: Session = Depends(get_db)
+):
+    """Create a new entry for a specific newsletter."""
+    logger.info(f"Request to create entry for newsletter_id={newsletter_id}")
+    db_newsletter = get_newsletter(db, newsletter_id=newsletter_id)
+    if db_newsletter is None:
+        logger.warning(f"Newsletter with id={newsletter_id} not found, cannot create entry")
+        raise HTTPException(status_code=404, detail="Newsletter not found")
+    return create_entry(db=db, entry=entry, newsletter_id=newsletter_id)
