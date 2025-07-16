@@ -1,5 +1,6 @@
 import email
 import imaplib
+from email.header import decode_header, make_header
 
 from sqlalchemy.orm import Session
 
@@ -85,7 +86,7 @@ def process_emails(db: Session):
                 sender_map[sender] = newsletter
 
             if newsletter:
-                subject = msg["Subject"]
+                subject = str(make_header(decode_header(msg["Subject"])))
 
                 body = ""
                 html = ""
