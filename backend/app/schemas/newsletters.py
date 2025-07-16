@@ -28,6 +28,7 @@ class NewsletterBase(BaseModel):
     """Base schema for a newsletter."""
 
     name: str
+    extract_content: bool = False
 
 
 class NewsletterCreate(NewsletterBase):

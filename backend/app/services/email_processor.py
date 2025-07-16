@@ -2,6 +2,7 @@ import email
 import imaplib
 from email.header import decode_header, make_header
 
+import trafilatura
 from sqlalchemy.orm import Session
 
 from app.core.logging import get_logger
@@ -114,6 +115,10 @@ def process_emails(db: Session):
                             pass
 
                 final_body = html or body
+                if newsletter.extract_content:
+                    extracted_body = trafilatura.extract(final_body)
+                    if extracted_body:
+                        final_body = extracted_body
 
                 entry = EntryCreate(
                     subject=subject, body=final_body, message_id=message_id

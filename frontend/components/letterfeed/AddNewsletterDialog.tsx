@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Plus } from "lucide-react"
 import { createNewsletter } from "@/lib/api"
+import { Checkbox } from "@/components/ui/checkbox"
 
 interface AddNewsletterDialogProps {
   isOpen: boolean
@@ -23,6 +24,7 @@ export function AddNewsletterDialog({ isOpen, onOpenChange, onSuccess }: AddNews
   const [newNewsletter, setNewNewsletter] = useState({
     name: "",
     emails: [""],
+    extract_content: false,
   })
 
   const handleAddEmail = () => {
@@ -52,8 +54,9 @@ export function AddNewsletterDialog({ isOpen, onOpenChange, onSuccess }: AddNews
         await createNewsletter({
           name: newNewsletter.name,
           sender_emails: newNewsletter.emails.filter((email) => email.trim()),
+          extract_content: newNewsletter.extract_content,
         })
-        setNewNewsletter({ name: "", emails: [""] })
+        setNewNewsletter({ name: "", emails: [""], extract_content: false })
         onOpenChange(false)
         onSuccess()
       } catch (error) {
@@ -101,6 +104,16 @@ export function AddNewsletterDialog({ isOpen, onOpenChange, onSuccess }: AddNews
               <Plus className="w-4 h-4 mr-2" />
               Add Another Email
             </Button>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="extract-content"
+              checked={newNewsletter.extract_content}
+              onCheckedChange={(checked) =>
+                setNewNewsletter((prev) => ({ ...prev, extract_content: !!checked }))
+              }
+            />
+            <Label htmlFor="extract-content">Extract main content from emails</Label>
           </div>
         </div>
         <DialogFooter>

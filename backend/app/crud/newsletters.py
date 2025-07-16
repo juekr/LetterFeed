@@ -50,7 +50,9 @@ def get_newsletters(db: Session, skip: int = 0, limit: int = 100):
 def create_newsletter(db: Session, newsletter: NewsletterCreate):
     """Create a new newsletter."""
     logger.info(f"Creating new newsletter with name '{newsletter.name}'")
-    db_newsletter = Newsletter(name=newsletter.name)
+    db_newsletter = Newsletter(
+        name=newsletter.name, extract_content=newsletter.extract_content
+    )
     db.add(db_newsletter)
     db.commit()
     db.refresh(db_newsletter)

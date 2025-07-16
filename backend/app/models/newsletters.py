@@ -12,6 +12,7 @@ class Newsletter(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String)
     is_active = Column(Boolean, default=True)
+    extract_content = Column(Boolean, default=False)
 
     senders = relationship(
         "Sender", back_populates="newsletter", cascade="all, delete-orphan"

@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Plus } from "lucide-react"
 import { Newsletter, updateNewsletter, deleteNewsletter } from "@/lib/api"
+import { Checkbox } from "@/components/ui/checkbox"
 
 interface EditNewsletterDialogProps {
   newsletter: Newsletter | null
@@ -21,9 +22,10 @@ interface EditNewsletterDialogProps {
 }
 
 export function EditNewsletterDialog({ newsletter, isOpen, onOpenChange, onSuccess }: EditNewsletterDialogProps) {
-  const [editedDetails, setEditedDetails] = useState<{ name: string; emails: string[] }>({
+  const [editedDetails, setEditedDetails] = useState<{ name: string; emails: string[], extract_content: boolean }>({
     name: "",
     emails: [],
+    extract_content: false,
   })
 
   useEffect(() => {
@@ -31,6 +33,7 @@ export function EditNewsletterDialog({ newsletter, isOpen, onOpenChange, onSucce
       setEditedDetails({
         name: newsletter.name,
         emails: newsletter.senders.map((s) => s.email),
+        extract_content: newsletter.extract_content,
       })
     }
   }, [newsletter])
@@ -63,6 +66,7 @@ export function EditNewsletterDialog({ newsletter, isOpen, onOpenChange, onSucce
       await updateNewsletter(newsletter.id, {
         name: editedDetails.name,
         sender_emails: editedDetails.emails.filter((email) => email.trim()),
+        extract_content: editedDetails.extract_content,
       })
       onOpenChange(false)
       onSuccess()
@@ -120,6 +124,16 @@ export function EditNewsletterDialog({ newsletter, isOpen, onOpenChange, onSucce
               <Plus className="w-4 h-4 mr-2" />
               Add Another Email
             </Button>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="edit-extract-content"
+              checked={editedDetails.extract_content}
+              onCheckedChange={(checked) =>
+                setEditedDetails((prev) => ({ ...prev, extract_content: !!checked }))
+              }
+            />
+            <Label htmlFor="edit-extract-content">Extract main content from emails</Label>
           </div>
         </div>
         <DialogFooter className="sm:justify-between">

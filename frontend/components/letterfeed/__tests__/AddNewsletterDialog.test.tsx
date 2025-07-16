@@ -25,6 +25,7 @@ describe("AddNewsletterDialog", () => {
       id: 1,
       name: "My New Newsletter",
       is_active: true,
+      extract_content: false,
       senders: [{ id: 1, email: "test@example.com", newsletter_id: 1 }],
       entries_count: 0,
     })
@@ -43,6 +44,7 @@ describe("AddNewsletterDialog", () => {
       expect(mockedApi.createNewsletter).toHaveBeenCalledWith({
         name: "My New Newsletter",
         sender_emails: ["test@example.com"],
+        extract_content: false,
       })
       expect(handleSuccess).toHaveBeenCalledTimes(1)
       expect(handleOpenChange).toHaveBeenCalledWith(false)
