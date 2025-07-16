@@ -89,7 +89,7 @@ export function EditNewsletterDialog({ newsletter, isOpen, onOpenChange, onSucce
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Edit Newsletter</DialogTitle>
           <DialogDescription>Update the details for {newsletter.name}.</DialogDescription>

@@ -27,8 +27,8 @@ export function Header({ onOpenAddNewsletter, onOpenSettings }: HeaderProps) {
   }
 
   return (
-    <div className="flex items-center justify-between mb-8">
-      <div className="flex items-center gap-4">
+    <div className="flex flex-col md:flex-row items-center justify-between mb-8">
+      <div className="flex items-center gap-4 mb-4 md:mb-0">
         <Image
           src="/logo.png"
           alt="LetterFeed Logo"
@@ -37,14 +37,14 @@ export function Header({ onOpenAddNewsletter, onOpenSettings }: HeaderProps) {
           className="rounded-lg"
         />
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">LetterFeed</h1>
-          <p className="text-gray-600 mt-1">
-            Read your newsletters as RSS feeds!
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">LetterFeed</h1>
+          <p className="text-gray-600 mt-1 hidden md:block">
+            Newsletters as RSS feeds
           </p>
         </div>
       </div>
 
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         <Button onClick={onOpenAddNewsletter}>
           <Plus className="w-4 h-4 mr-2" />
           Add Newsletter
