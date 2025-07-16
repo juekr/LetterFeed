@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.logging import get_logger
+from app.crud.entries import create_entry
 from app.crud.newsletters import (
     create_newsletter,
     delete_newsletter,
@@ -12,9 +13,8 @@ from app.crud.newsletters import (
     get_newsletters,
     update_newsletter,
 )
-from app.schemas.newsletters import Newsletter, NewsletterCreate, NewsletterUpdate
 from app.schemas.entries import Entry, EntryCreate
-from app.crud.entries import create_entry
+from app.schemas.newsletters import Newsletter, NewsletterCreate, NewsletterUpdate
 
 logger = get_logger(__name__)
 router = APIRouter()
@@ -82,6 +82,8 @@ def create_newsletter_entry(
     logger.info(f"Request to create entry for newsletter_id={newsletter_id}")
     db_newsletter = get_newsletter(db, newsletter_id=newsletter_id)
     if db_newsletter is None:
-        logger.warning(f"Newsletter with id={newsletter_id} not found, cannot create entry")
+        logger.warning(
+            f"Newsletter with id={newsletter_id} not found, cannot create entry"
+        )
         raise HTTPException(status_code=404, detail="Newsletter not found")
     return create_entry(db=db, entry=entry, newsletter_id=newsletter_id)

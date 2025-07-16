@@ -163,12 +163,15 @@ def test_get_newsletter_feed(client: TestClient):
     response = client.get(f"/feeds/{newsletter_id}")
     assert response.status_code == 200
     assert "application/atom+xml" in response.headers["content-type"]
-    assert f"<title>Feed Test Newsletter</title>" in response.text
+    assert "<title>Feed Test Newsletter</title>" in response.text
     import xml.etree.ElementTree as ET
+
     root = ET.fromstring(response.text)
     # Atom feed uses a namespace, so we need to include it in our tag searches
-    ns = {'atom': 'http://www.w3.org/2005/Atom'}
-    entry_titles = [entry.find('atom:title', ns).text for entry in root.findall('atom:entry', ns)]
+    ns = {"atom": "http://www.w3.org/2005/Atom"}
+    entry_titles = [
+        entry.find("atom:title", ns).text for entry in root.findall("atom:entry", ns)
+    ]
     assert "Test Entry 1" in entry_titles
     assert "Test Entry 2" in entry_titles
 
