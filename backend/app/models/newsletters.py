@@ -1,4 +1,4 @@
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String
+from sqlalchemy import Boolean, Column, ForeignKey, String
 from sqlalchemy.orm import relationship
 
 from app.core.database import Base
@@ -9,7 +9,7 @@ class Newsletter(Base):
 
     __tablename__ = "newsletters"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(String, primary_key=True, index=True)
     name = Column(String)
     move_to_folder = Column(String, nullable=True)
     is_active = Column(Boolean, default=True)
@@ -28,8 +28,8 @@ class Sender(Base):
 
     __tablename__ = "senders"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(String, primary_key=True, index=True)
     email = Column(String, unique=True, index=True, nullable=False)
-    newsletter_id = Column(Integer, ForeignKey("newsletters.id"), nullable=False)
+    newsletter_id = Column(String, ForeignKey("newsletters.id"), nullable=False)
 
     newsletter = relationship("Newsletter", back_populates="senders")

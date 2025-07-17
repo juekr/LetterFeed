@@ -38,7 +38,7 @@ def read_newsletters(skip: int = 0, limit: int = 100, db: Session = Depends(get_
 
 
 @router.get("/newsletters/{newsletter_id}", response_model=Newsletter)
-def read_newsletter(newsletter_id: int, db: Session = Depends(get_db)):
+def read_newsletter(newsletter_id: str, db: Session = Depends(get_db)):
     """Retrieve a single newsletter by its ID."""
     logger.info(f"Request to read newsletter with id={newsletter_id}")
     db_newsletter = get_newsletter(db, newsletter_id=newsletter_id)
@@ -50,7 +50,7 @@ def read_newsletter(newsletter_id: int, db: Session = Depends(get_db)):
 
 @router.put("/newsletters/{newsletter_id}", response_model=Newsletter)
 def update_existing_newsletter(
-    newsletter_id: int, newsletter: NewsletterUpdate, db: Session = Depends(get_db)
+    newsletter_id: str, newsletter: NewsletterUpdate, db: Session = Depends(get_db)
 ):
     """Update an existing newsletter."""
     logger.info(f"Request to update newsletter with id={newsletter_id}")
@@ -64,7 +64,7 @@ def update_existing_newsletter(
 
 
 @router.delete("/newsletters/{newsletter_id}", response_model=Newsletter)
-def delete_existing_newsletter(newsletter_id: int, db: Session = Depends(get_db)):
+def delete_existing_newsletter(newsletter_id: str, db: Session = Depends(get_db)):
     """Delete a newsletter by its ID."""
     logger.info(f"Request to delete newsletter with id={newsletter_id}")
     db_newsletter = delete_newsletter(db, newsletter_id=newsletter_id)
@@ -76,7 +76,7 @@ def delete_existing_newsletter(newsletter_id: int, db: Session = Depends(get_db)
 
 @router.post("/newsletters/{newsletter_id}/entries", response_model=Entry)
 def create_newsletter_entry(
-    newsletter_id: int, entry: EntryCreate, db: Session = Depends(get_db)
+    newsletter_id: str, entry: EntryCreate, db: Session = Depends(get_db)
 ):
     """Create a new entry for a specific newsletter."""
     logger.info(f"Request to create entry for newsletter_id={newsletter_id}")

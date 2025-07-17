@@ -20,8 +20,8 @@ class EntryCreate(EntryBase):
 class Entry(EntryBase):
     """Schema for retrieving an entry with its ID and newsletter ID."""
 
-    id: int
-    newsletter_id: int
+    id: str
+    newsletter_id: str
     received_at: datetime.datetime
 
     model_config = ConfigDict(from_attributes=True)

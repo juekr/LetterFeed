@@ -1,3 +1,4 @@
+from nanoid import generate
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
@@ -9,7 +10,7 @@ from app.schemas.newsletters import NewsletterCreate, NewsletterUpdate
 logger = get_logger(__name__)
 
 
-def get_newsletter(db: Session, newsletter_id: int):
+def get_newsletter(db: Session, newsletter_id: str):
     """Retrieve a single newsletter by its ID."""
     logger.debug(f"Querying for newsletter with id={newsletter_id}")
     result = (
@@ -51,6 +52,7 @@ def create_newsletter(db: Session, newsletter: NewsletterCreate):
     """Create a new newsletter."""
     logger.info(f"Creating new newsletter with name '{newsletter.name}'")
     db_newsletter = Newsletter(
+        id=generate(size=10),
         name=newsletter.name,
         extract_content=newsletter.extract_content,
         move_to_folder=newsletter.move_to_folder,
@@ -60,7 +62,7 @@ def create_newsletter(db: Session, newsletter: NewsletterCreate):
     db.refresh(db_newsletter)
 
     for email in newsletter.sender_emails:
-        db_sender = Sender(email=email, newsletter_id=db_newsletter.id)
+        db_sender = Sender(id=generate(), email=email, newsletter_id=db_newsletter.id)
         db.add(db_sender)
 
     db.commit()
@@ -72,7 +74,7 @@ def create_newsletter(db: Session, newsletter: NewsletterCreate):
 
 
 def update_newsletter(
-    db: Session, newsletter_id: int, newsletter_update: NewsletterUpdate
+    db: Session, newsletter_id: str, newsletter_update: NewsletterUpdate
 ):
     """Update an existing newsletter."""
     logger.info(f"Updating newsletter with id={newsletter_id}")
@@ -90,7 +92,7 @@ def update_newsletter(
     db.commit()
 
     for email in newsletter_update.sender_emails:
-        db_sender = Sender(email=email, newsletter_id=db_newsletter.id)
+        db_sender = Sender(id=generate(), email=email, newsletter_id=db_newsletter.id)
         db.add(db_sender)
 
     db.commit()
@@ -99,7 +101,7 @@ def update_newsletter(
     return get_newsletter(db, newsletter_id)
 
 
-def delete_newsletter(db: Session, newsletter_id: int):
+def delete_newsletter(db: Session, newsletter_id: str):
     """Delete a newsletter by its ID."""
     logger.info(f"Deleting newsletter with id={newsletter_id}")
     db_newsletter = get_newsletter(db, newsletter_id)

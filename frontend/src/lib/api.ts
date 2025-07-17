@@ -1,18 +1,18 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export interface Sender {
-    id: number;
+    id: string;
     email: string;
-    newsletter_id: number;
+    newsletter_id: string;
 }
 
 export interface Newsletter {
-  id: number
+  id: string
   name: string
   is_active: boolean
   move_to_folder?: string | null
   extract_content: boolean
-  senders: { id: number; email: string }[]
+  senders: { id: string; email: string }[]
   entries_count: number
 }
 
@@ -106,7 +106,7 @@ export async function createNewsletter(newsletter: NewsletterCreate): Promise<Ne
     }, "Failed to create newsletter");
 }
 
-export async function updateNewsletter(id: number, newsletter: NewsletterUpdate): Promise<Newsletter> {
+export async function updateNewsletter(id: string, newsletter: NewsletterUpdate): Promise<Newsletter> {
     return fetcher<Newsletter>(`${API_BASE_URL}/newsletters/${id}`, {
         method: 'PUT',
         headers: {
@@ -116,7 +116,7 @@ export async function updateNewsletter(id: number, newsletter: NewsletterUpdate)
     }, "Failed to update newsletter");
 }
 
-export async function deleteNewsletter(id: number): Promise<void> {
+export async function deleteNewsletter(id: string): Promise<void> {
     await fetcher<void>(`${API_BASE_URL}/newsletters/${id}`, {
         method: 'DELETE',
     }, "Failed to delete newsletter");
@@ -152,6 +152,6 @@ export async function processEmails(): Promise<{ message: string }> {
     }, "Failed to process emails");
 }
 
-export function getFeedUrl(newsletterId: number): string {
+export function getFeedUrl(newsletterId: string): string {
     return `${API_BASE_URL}/feeds/${newsletterId}`;
 }

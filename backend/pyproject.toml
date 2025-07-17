@@ -8,6 +8,7 @@ dependencies = [
     "apscheduler>=3.11.0",
     "fastapi>=0.116.0",
     "feedgen>=1.0.0",
+    "nanoid>=2.0.0",
     "pydantic-settings>=2.10.1",
     "python-dotenv>=1.1.1",
     "sqlalchemy>=2.0.41",

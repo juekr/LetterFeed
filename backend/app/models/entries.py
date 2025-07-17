@@ -1,6 +1,6 @@
 import datetime
 
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy import Column, DateTime, ForeignKey, String, Text
 from sqlalchemy.orm import relationship
 
 from app.core.database import Base
@@ -11,8 +11,8 @@ class Entry(Base):
 
     __tablename__ = "entries"
 
-    id = Column(Integer, primary_key=True, index=True)
-    newsletter_id = Column(Integer, ForeignKey("newsletters.id"))
+    id = Column(String, primary_key=True, index=True)
+    newsletter_id = Column(String, ForeignKey("newsletters.id"))
     subject = Column(String)
     body = Column(Text)
     received_at = Column(

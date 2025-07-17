@@ -7,7 +7,7 @@ from app.crud.entries import get_entries_by_newsletter
 from app.crud.newsletters import get_newsletter
 
 
-def generate_feed(db: Session, newsletter_id: int):
+def generate_feed(db: Session, newsletter_id: str):
     """Generate an Atom feed for a given newsletter."""
     newsletter = get_newsletter(db, newsletter_id)
     if not newsletter:

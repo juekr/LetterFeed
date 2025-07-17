@@ -11,7 +11,7 @@ router = APIRouter()
 
 
 @router.get("/feeds/{newsletter_id}")
-def get_newsletter_feed(newsletter_id: int, db: Session = Depends(get_db)):
+def get_newsletter_feed(newsletter_id: str, db: Session = Depends(get_db)):
     """Generate an Atom feed for a specific newsletter."""
     logger.info(f"Generating feed for newsletter_id={newsletter_id}")
     feed = generate_feed(db, newsletter_id)

@@ -18,8 +18,8 @@ class SenderCreate(SenderBase):
 class Sender(SenderBase):
     """Schema for retrieving a sender with its ID and newsletter ID."""
 
-    id: int
-    newsletter_id: int
+    id: str
+    newsletter_id: str
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -47,7 +47,7 @@ class NewsletterUpdate(NewsletterBase):
 class Newsletter(NewsletterBase):
     """Schema for retrieving a newsletter with its ID, active status, senders, and entries count."""
 
-    id: int
+    id: str
     is_active: bool
     senders: List[Sender] = []
     entries_count: int

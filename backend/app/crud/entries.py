@@ -1,3 +1,4 @@
+from nanoid import generate
 from sqlalchemy.orm import Session
 
 from app.core.logging import get_logger
@@ -8,7 +9,7 @@ logger = get_logger(__name__)
 
 
 def get_entries_by_newsletter(
-    db: Session, newsletter_id: int, skip: int = 0, limit: int = 100
+    db: Session, newsletter_id: str, skip: int = 0, limit: int = 100
 ):
     """Retrieve entries for a specific newsletter."""
     logger.debug(
@@ -29,12 +30,12 @@ def get_entry_by_message_id(db: Session, message_id: str):
     return db.query(Entry).filter(Entry.message_id == message_id).first()
 
 
-def create_entry(db: Session, entry: EntryCreate, newsletter_id: int):
+def create_entry(db: Session, entry: EntryCreate, newsletter_id: str):
     """Create a new entry for a newsletter."""
     logger.info(
         f"Creating new entry for newsletter_id={newsletter_id} with subject '{entry.subject}'"
     )
-    db_entry = Entry(**entry.model_dump(), newsletter_id=newsletter_id)
+    db_entry = Entry(id=generate(), **entry.model_dump(), newsletter_id=newsletter_id)
     db.add(db_entry)
     db.commit()
     db.refresh(db_entry)
