@@ -51,7 +51,9 @@ def create_newsletter(db: Session, newsletter: NewsletterCreate):
     """Create a new newsletter."""
     logger.info(f"Creating new newsletter with name '{newsletter.name}'")
     db_newsletter = Newsletter(
-        name=newsletter.name, extract_content=newsletter.extract_content
+        name=newsletter.name,
+        extract_content=newsletter.extract_content,
+        move_to_folder=newsletter.move_to_folder,
     )
     db.add(db_newsletter)
     db.commit()
@@ -79,6 +81,8 @@ def update_newsletter(
         return None
 
     db_newsletter.name = newsletter_update.name
+    db_newsletter.move_to_folder = newsletter_update.move_to_folder
+    db_newsletter.extract_content = newsletter_update.extract_content
 
     # Simple approach: delete existing senders and add new ones
     for sender in db_newsletter.senders:

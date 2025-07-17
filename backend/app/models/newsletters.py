@@ -11,6 +11,7 @@ class Newsletter(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String)
+    move_to_folder = Column(String, nullable=True)
     is_active = Column(Boolean, default=True)
     extract_content = Column(Boolean, default=False)
 

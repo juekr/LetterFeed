@@ -14,17 +14,27 @@ import { Plus } from "lucide-react"
 import { Newsletter, updateNewsletter, deleteNewsletter } from "@/lib/api"
 import { Checkbox } from "@/components/ui/checkbox"
 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+
 interface EditNewsletterDialogProps {
   newsletter: Newsletter | null
   isOpen: boolean
+  folderOptions: string[]
   onOpenChange: (isOpen: boolean) => void
   onSuccess: () => void
 }
 
-export function EditNewsletterDialog({ newsletter, isOpen, onOpenChange, onSuccess }: EditNewsletterDialogProps) {
-  const [editedDetails, setEditedDetails] = useState<{ name: string; emails: string[], extract_content: boolean }>({
+export function EditNewsletterDialog({ newsletter, isOpen, folderOptions, onOpenChange, onSuccess }: EditNewsletterDialogProps) {
+  const [editedDetails, setEditedDetails] = useState<{ name: string; emails: string[], move_to_folder: string | null, extract_content: boolean }>({
     name: "",
     emails: [],
+    move_to_folder: "",
     extract_content: false,
   })
 
@@ -33,6 +43,7 @@ export function EditNewsletterDialog({ newsletter, isOpen, onOpenChange, onSucce
       setEditedDetails({
         name: newsletter.name,
         emails: newsletter.senders.map((s) => s.email),
+        move_to_folder: newsletter.move_to_folder || "",
         extract_content: newsletter.extract_content,
       })
     }
@@ -66,6 +77,7 @@ export function EditNewsletterDialog({ newsletter, isOpen, onOpenChange, onSucce
       await updateNewsletter(newsletter.id, {
         name: editedDetails.name,
         sender_emails: editedDetails.emails.filter((email) => email.trim()),
+        move_to_folder: editedDetails.move_to_folder,
         extract_content: editedDetails.extract_content,
       })
       onOpenChange(false)
@@ -102,6 +114,27 @@ export function EditNewsletterDialog({ newsletter, isOpen, onOpenChange, onSucce
               value={editedDetails.name}
               onChange={(e) => setEditedDetails((prev) => ({ ...prev, name: e.target.value }))}
             />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="edit-move_to_folder">Move To Folder</Label>
+            <Select
+              value={editedDetails.move_to_folder || "None"}
+              onValueChange={(value) =>
+                setEditedDetails((prev) => ({ ...prev, move_to_folder: value === "None" ? "" : value }))
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select folder or leave empty" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="None">Default (use global setting)</SelectItem>
+                {folderOptions.map((folder) => (
+                  <SelectItem key={folder} value={folder}>
+                    {folder}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div className="space-y-2">
             <Label>Email Addresses</Label>

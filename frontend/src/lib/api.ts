@@ -10,6 +10,7 @@ export interface Newsletter {
   id: number
   name: string
   is_active: boolean
+  move_to_folder?: string | null
   extract_content: boolean
   senders: { id: number; email: string }[]
   entries_count: number
@@ -18,12 +19,14 @@ export interface Newsletter {
 export interface NewsletterCreate {
     name: string;
     sender_emails: string[];
+    move_to_folder?: string | null;
     extract_content: boolean;
 }
 
 export interface NewsletterUpdate {
     name: string;
     sender_emails: string[];
+    move_to_folder?: string | null;
     extract_content: boolean;
 }
 

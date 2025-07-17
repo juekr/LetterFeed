@@ -110,6 +110,23 @@ def test_create_newsletter(db_session: Session):
     assert newsletter.senders[0].email == unique_email
 
 
+def test_create_newsletter_with_move_to_folder(db_session: Session):
+    """Test creating a newsletter with the move_to_folder attribute."""
+    unique_email = f"sender_{uuid.uuid4()}@test.com"
+    newsletter_data = NewsletterCreate(
+        name="Test Newsletter with Folder",
+        sender_emails=[unique_email],
+        move_to_folder="Archive/Test",
+        extract_content=True,
+    )
+    newsletter = create_newsletter(db_session, newsletter_data)
+    retrieved_newsletter = get_newsletter(db_session, newsletter.id)
+
+    assert retrieved_newsletter.name == "Test Newsletter with Folder"
+    assert retrieved_newsletter.move_to_folder == "Archive/Test"
+    assert retrieved_newsletter.extract_content is True
+
+
 def test_get_newsletter(db_session: Session):
     """Test getting a single newsletter."""
     unique_email = f"sender_{uuid.uuid4()}@test.com"

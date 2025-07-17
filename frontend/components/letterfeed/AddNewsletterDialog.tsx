@@ -14,16 +14,26 @@ import { Plus } from "lucide-react"
 import { createNewsletter } from "@/lib/api"
 import { Checkbox } from "@/components/ui/checkbox"
 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+
 interface AddNewsletterDialogProps {
   isOpen: boolean
+  folderOptions: string[]
   onOpenChange: (isOpen: boolean) => void
   onSuccess: () => void
 }
 
-export function AddNewsletterDialog({ isOpen, onOpenChange, onSuccess }: AddNewsletterDialogProps) {
+export function AddNewsletterDialog({ isOpen, folderOptions, onOpenChange, onSuccess }: AddNewsletterDialogProps) {
   const [newNewsletter, setNewNewsletter] = useState({
     name: "",
     emails: [""],
+    move_to_folder: "",
     extract_content: false,
   })
 
@@ -54,9 +64,10 @@ export function AddNewsletterDialog({ isOpen, onOpenChange, onSuccess }: AddNews
         await createNewsletter({
           name: newNewsletter.name,
           sender_emails: newNewsletter.emails.filter((email) => email.trim()),
+          move_to_folder: newNewsletter.move_to_folder,
           extract_content: newNewsletter.extract_content,
         })
-        setNewNewsletter({ name: "", emails: [""], extract_content: false })
+        setNewNewsletter({ name: "", emails: [""], move_to_folder: "", extract_content: false })
         onOpenChange(false)
         onSuccess()
       } catch (error) {
@@ -81,6 +92,28 @@ export function AddNewsletterDialog({ isOpen, onOpenChange, onSuccess }: AddNews
               onChange={(e) => setNewNewsletter((prev) => ({ ...prev, name: e.target.value }))}
               placeholder="Enter newsletter name"
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="move_to_folder">Move To Folder</Label>
+            <Select
+              value={newNewsletter.move_to_folder || "None"}
+              onValueChange={(value) =>
+                setNewNewsletter((prev) => ({ ...prev, move_to_folder: value === "None" ? "" : value }))
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select folder or leave empty" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="None">Default (use global setting)</SelectItem>
+                {folderOptions.map((folder) => (
+                  <SelectItem key={folder} value={folder}>
+                    {folder}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">

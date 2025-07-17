@@ -28,6 +28,7 @@ class NewsletterBase(BaseModel):
     """Base schema for a newsletter."""
 
     name: str
+    move_to_folder: str | None = None
     extract_content: bool = False
 
 

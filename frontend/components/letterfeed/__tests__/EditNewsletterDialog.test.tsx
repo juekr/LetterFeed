@@ -18,6 +18,7 @@ const mockNewsletter: Newsletter = {
   id: 1,
   name: "Existing Newsletter",
   is_active: true,
+  extract_content: false,
   senders: [{ id: 1, email: "current@example.com", newsletter_id: 1 }],
   entries_count: 5,
 }
@@ -39,6 +40,7 @@ describe("EditNewsletterDialog", () => {
       <EditNewsletterDialog
         newsletter={mockNewsletter}
         isOpen={true}
+        folderOptions={["INBOX", "Archive"]}
         onOpenChange={handleOpenChange}
         onSuccess={handleSuccess}
       />
@@ -59,6 +61,8 @@ describe("EditNewsletterDialog", () => {
       expect(mockedApi.updateNewsletter).toHaveBeenCalledWith(1, {
         name: "Updated Name",
         sender_emails: ["current@example.com"],
+        move_to_folder: "",
+        extract_content: false,
       })
       expect(handleSuccess).toHaveBeenCalledTimes(1)
       expect(handleOpenChange).toHaveBeenCalledWith(false)
@@ -72,6 +76,7 @@ describe("EditNewsletterDialog", () => {
       <EditNewsletterDialog
         newsletter={mockNewsletter}
         isOpen={true}
+        folderOptions={["INBOX", "Archive"]}
         onOpenChange={handleOpenChange}
         onSuccess={handleSuccess}
       />
@@ -95,6 +100,7 @@ describe("EditNewsletterDialog", () => {
       <EditNewsletterDialog
         newsletter={mockNewsletter}
         isOpen={true}
+        folderOptions={["INBOX", "Archive"]}
         onOpenChange={handleOpenChange}
         onSuccess={handleSuccess}
       />

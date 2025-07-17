@@ -146,9 +146,10 @@ def _process_single_email(
         logger.debug(f"Marking email with id={num} as read")
         mail.store(num, "+FLAGS", "\\Seen")
 
-    if settings.move_to_folder:
-        logger.debug(f"Moving email with id={num} to {settings.move_to_folder}")
-        mail.copy(num, settings.move_to_folder)
+    move_folder = newsletter.move_to_folder or settings.move_to_folder
+    if move_folder:
+        logger.debug(f"Moving email with id={num} to {move_folder}")
+        mail.copy(num, move_folder)
         mail.store(num, "+FLAGS", "\\Deleted")
 
 

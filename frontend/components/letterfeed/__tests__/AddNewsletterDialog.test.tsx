@@ -30,7 +30,7 @@ describe("AddNewsletterDialog", () => {
       entries_count: 0,
     })
 
-    render(<AddNewsletterDialog isOpen={true} onOpenChange={handleOpenChange} onSuccess={handleSuccess} />)
+    render(<AddNewsletterDialog isOpen={true} folderOptions={["INBOX", "Archive"]} onOpenChange={handleOpenChange} onSuccess={handleSuccess} />)
 
     // Fill out the form
     fireEvent.change(screen.getByLabelText(/Newsletter Name/i), { target: { value: "My New Newsletter" } })
@@ -44,6 +44,7 @@ describe("AddNewsletterDialog", () => {
       expect(mockedApi.createNewsletter).toHaveBeenCalledWith({
         name: "My New Newsletter",
         sender_emails: ["test@example.com"],
+        move_to_folder: "",
         extract_content: false,
       })
       expect(handleSuccess).toHaveBeenCalledTimes(1)
@@ -52,7 +53,7 @@ describe("AddNewsletterDialog", () => {
   })
 
   it("allows adding and removing email fields", () => {
-    render(<AddNewsletterDialog isOpen={true} onOpenChange={() => {}} onSuccess={() => {}} />)
+    render(<AddNewsletterDialog isOpen={true} folderOptions={[]} onOpenChange={() => {}} onSuccess={() => {}} />)
 
     // Initial state
     expect(screen.getAllByPlaceholderText(/Enter email address/i)).toHaveLength(1)
@@ -67,7 +68,7 @@ describe("AddNewsletterDialog", () => {
   })
 
   it("closes the dialog when cancel is clicked", () => {
-    render(<AddNewsletterDialog isOpen={true} onOpenChange={handleOpenChange} onSuccess={handleSuccess} />)
+    render(<AddNewsletterDialog isOpen={true} folderOptions={["INBOX", "Archive"]} onOpenChange={handleOpenChange} onSuccess={handleSuccess} />)
 
     fireEvent.click(screen.getByRole("button", { name: /Cancel/i }))
     expect(handleOpenChange).toHaveBeenCalledWith(false)

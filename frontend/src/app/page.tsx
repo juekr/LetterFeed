@@ -73,6 +73,7 @@ export default function LetterFeedApp() {
 
         <AddNewsletterDialog
           isOpen={isAddDialogOpen}
+          folderOptions={folderOptions}
           onOpenChange={setIsAddDialogOpen}
           onSuccess={fetchData}
         />
@@ -81,6 +82,7 @@ export default function LetterFeedApp() {
           <EditNewsletterDialog
             newsletter={editingNewsletter}
             isOpen={isEditDialogOpen}
+            folderOptions={folderOptions}
             onOpenChange={setIsEditDialogOpen}
             onSuccess={() => {
               setEditingNewsletter(null)
