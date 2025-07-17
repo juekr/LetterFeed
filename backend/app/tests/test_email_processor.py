@@ -1,97 +1,115 @@
 import imaplib
 from email.message import Message
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from sqlalchemy.orm import Session
 
 from app.crud.newsletters import create_newsletter
 from app.crud.settings import create_or_update_settings
+from app.models.newsletters import Newsletter
 from app.schemas.newsletters import NewsletterCreate
 from app.schemas.settings import SettingsCreate
 from app.services.email_processor import _process_single_email
 
 
+def _setup_test_email_processing(
+    db_session: Session,
+    newsletter_create_data: NewsletterCreate,
+    settings_create_data: SettingsCreate,
+) -> tuple[MagicMock, Newsletter, SettingsCreate]:
+    """Help to set up mocks and data for email processing tests."""
+    settings = create_or_update_settings(db_session, settings_create_data)
+    newsletter = create_newsletter(db_session, newsletter_create_data)
+
+    mock_mail = MagicMock(spec=imaplib.IMAP4_SSL)
+    msg = Message()
+    msg["From"] = newsletter_create_data.sender_emails[0]
+    msg["Subject"] = "Test Email"
+    msg["Message-ID"] = "<test-message-id>"
+    mock_mail.fetch.return_value = ("OK", [(b"1 (RFC822)", msg.as_bytes())])
+
+    return mock_mail, newsletter, settings
+
+
 def test_process_single_email_with_newsletter_move_folder(db_session: Session):
-    """Test that the per-newsletter move_to_folder is used when set, overriding the global setting."""
+    """Test that the per-newsletter move_to_folder is used, overriding the global setting."""
     # 1. ARRANGE
-    # Global settings with a move folder
     settings_data = SettingsCreate(
         imap_server="test.com",
         imap_username="test",
         imap_password="password",
         move_to_folder="GlobalArchive",
     )
-    settings = create_or_update_settings(db_session, settings_data)
-
-    # Newsletter with a specific move folder
     newsletter_data = NewsletterCreate(
         name="Test Newsletter",
         sender_emails=["test@example.com"],
+        move_to_folder="NewsletterArchive",
     )
-    newsletter = create_newsletter(db_session, newsletter_data)
-    newsletter.move_to_folder = "NewsletterArchive"
-    db_session.commit()
-
-    # Mock IMAP mail object
-    mock_mail = MagicMock(spec=imaplib.IMAP4_SSL)
-
-    # Mock email message
-    msg = Message()
-    msg["From"] = "test@example.com"
-    msg["Subject"] = "Test Email"
-    msg["Message-ID"] = "<test-message-id>"
-
-    # Mock mail.fetch to return the message
-    mock_mail.fetch.return_value = ("OK", [(b"1 (RFC822)", msg.as_bytes())])
-
-    sender_map = {"test@example.com": newsletter}
+    mock_mail, newsletter, settings = _setup_test_email_processing(
+        db_session, newsletter_data, settings_data
+    )
+    sender_map = {newsletter.senders[0].email: newsletter}
 
     # 2. ACT
     _process_single_email("1", mock_mail, db_session, sender_map, settings)
 
     # 3. ASSERT
-    # Check that the email was moved to the newsletter-specific folder
     mock_mail.copy.assert_called_once_with("1", "NewsletterArchive")
     mock_mail.store.assert_any_call("1", "+FLAGS", "\\Deleted")
 
 
 def test_process_single_email_with_global_move_folder(db_session: Session):
-    """Test that the global move_to_folder is used when the per-newsletter setting is not set."""
+    """Test that the global move_to_folder is used when the per-newsletter one is not set."""
     # 1. ARRANGE
-    # Global settings with a move folder
     settings_data = SettingsCreate(
         imap_server="test.com",
         imap_username="test",
         imap_password="password",
         move_to_folder="GlobalArchive",
     )
-    settings = create_or_update_settings(db_session, settings_data)
-
-    # Newsletter without a specific move folder
     newsletter_data = NewsletterCreate(
-        name="Test Newsletter",
-        sender_emails=["test@example.com"],
+        name="Test Newsletter", sender_emails=["test@example.com"]
     )
-    newsletter = create_newsletter(db_session, newsletter_data)
-
-    # Mock IMAP mail object
-    mock_mail = MagicMock(spec=imaplib.IMAP4_SSL)
-
-    # Mock email message
-    msg = Message()
-    msg["From"] = "test@example.com"
-    msg["Subject"] = "Test Email"
-    msg["Message-ID"] = "<test-message-id-2>"
-
-    # Mock mail.fetch to return the message
-    mock_mail.fetch.return_value = ("OK", [(b"1 (RFC822)", msg.as_bytes())])
-
-    sender_map = {"test@example.com": newsletter}
+    mock_mail, newsletter, settings = _setup_test_email_processing(
+        db_session, newsletter_data, settings_data
+    )
+    sender_map = {newsletter.senders[0].email: newsletter}
 
     # 2. ACT
     _process_single_email("1", mock_mail, db_session, sender_map, settings)
 
     # 3. ASSERT
-    # Check that the email was moved to the global folder
     mock_mail.copy.assert_called_once_with("1", "GlobalArchive")
     mock_mail.store.assert_any_call("1", "+FLAGS", "\\Deleted")
+
+
+@patch("app.services.email_processor.trafilatura.extract")
+def test_process_single_email_with_content_extraction(
+    mock_trafilatura, db_session: Session
+):
+    """Test that trafilatura is called when extract_content is True."""
+    # 1. ARRANGE
+    mock_trafilatura.return_value = "Extracted Body"
+    settings_data = SettingsCreate(
+        imap_server="test.com", imap_username="test", imap_password="password"
+    )
+    newsletter_data = NewsletterCreate(
+        name="Test Newsletter",
+        sender_emails=["test@example.com"],
+        extract_content=True,
+    )
+    mock_mail, newsletter, settings = _setup_test_email_processing(
+        db_session, newsletter_data, settings_data
+    )
+    sender_map = {newsletter.senders[0].email: newsletter}
+
+    # 2. ACT
+    with patch("app.services.email_processor.create_entry") as mock_create_entry:
+        _process_single_email("1", mock_mail, db_session, sender_map, settings)
+
+    # 3. ASSERT
+    mock_trafilatura.assert_called_once()
+    # Check that create_entry was called with the extracted body
+    mock_create_entry.assert_called_once()
+    entry_create_arg = mock_create_entry.call_args[0][1]
+    assert entry_create_arg.body == "Extracted Body"

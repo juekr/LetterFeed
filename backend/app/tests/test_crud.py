@@ -205,7 +205,10 @@ def test_update_newsletter(db_session: Session):
     """Test updating a newsletter."""
     unique_email = f"sender_{uuid.uuid4()}@test.com"
     newsletter_data = NewsletterCreate(
-        name="Newsletter to Update", sender_emails=[unique_email]
+        name="Newsletter to Update",
+        sender_emails=[unique_email],
+        move_to_folder="OldFolder",
+        extract_content=False,
     )
     newsletter = create_newsletter(db_session, newsletter_data)
 
@@ -213,7 +216,10 @@ def test_update_newsletter(db_session: Session):
 
     updated_email = f"updated_sender_{uuid.uuid4()}@test.com"
     updated_newsletter_data = NewsletterUpdate(
-        name="Updated Newsletter", sender_emails=[updated_email]
+        name="Updated Newsletter",
+        sender_emails=[updated_email],
+        move_to_folder="NewFolder",
+        extract_content=True,
     )
     from app.crud.newsletters import update_newsletter
 
@@ -224,6 +230,8 @@ def test_update_newsletter(db_session: Session):
     assert updated_newsletter.name == "Updated Newsletter"
     assert len(updated_newsletter.senders) == 1
     assert updated_newsletter.senders[0].email == updated_email
+    assert updated_newsletter.move_to_folder == "NewFolder"
+    assert updated_newsletter.extract_content is True
 
 
 def test_delete_newsletter(db_session: Session):
