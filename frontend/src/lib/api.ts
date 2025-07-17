@@ -1,5 +1,3 @@
-// frontend/src/lib/api.ts
-
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export interface Sender {
@@ -53,102 +51,102 @@ export interface SettingsCreate {
 }
 
 
-export async function getNewsletters(): Promise<Newsletter[]> {
-    const response = await fetch(`${API_BASE_URL}/newsletters`);
-    if (!response.ok) {
-        throw new Error("Failed to fetch newsletters");
+import { toast } from "sonner";
+
+async function fetcher<T>(
+    url: string,
+    options: RequestInit = {},
+    errorMessagePrefix: string,
+    returnEmptyArrayOnFailure: boolean = false
+): Promise<T> {
+    try {
+        const response = await fetch(url, options);
+        if (!response.ok) {
+            let errorText = `${errorMessagePrefix}: ${response.statusText}`;
+            try {
+                const errorData = await response.json();
+                if (errorData.detail) {
+                    errorText = errorData.detail;
+                }
+            } catch (e) { // eslint-disable-line @typescript-eslint/no-unused-vars
+                // ignore error if response is not JSON
+            }
+            toast.error(errorText);
+            if (returnEmptyArrayOnFailure) {
+                return [] as T;
+            }
+            throw new Error(errorText);
+        }
+        return response.json();
+    } catch (error) {
+        if (error instanceof TypeError) {
+            toast.error("Network error: Could not connect to the backend.");
+        }
+        if (returnEmptyArrayOnFailure) {
+            return [] as T;
+        }
+        throw error;
     }
-    return response.json();
+}
+
+export async function getNewsletters(): Promise<Newsletter[]> {
+    return fetcher<Newsletter[]>(`${API_BASE_URL}/newsletters`, {}, "Failed to fetch newsletters");
 }
 
 export async function createNewsletter(newsletter: NewsletterCreate): Promise<Newsletter> {
-    const response = await fetch(`${API_BASE_URL}/newsletters`, {
+    return fetcher<Newsletter>(`${API_BASE_URL}/newsletters`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
         body: JSON.stringify(newsletter),
-    });
-    if (!response.ok) {
-        throw new Error("Failed to create newsletter");
-    }
-    return response.json();
+    }, "Failed to create newsletter");
 }
 
 export async function updateNewsletter(id: number, newsletter: NewsletterUpdate): Promise<Newsletter> {
-    const response = await fetch(`${API_BASE_URL}/newsletters/${id}`, {
+    return fetcher<Newsletter>(`${API_BASE_URL}/newsletters/${id}`, {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
         },
         body: JSON.stringify(newsletter),
-    });
-    if (!response.ok) {
-        throw new Error("Failed to update newsletter");
-    }
-    return response.json();
+    }, "Failed to update newsletter");
 }
 
 export async function deleteNewsletter(id: number): Promise<void> {
-    const response = await fetch(`${API_BASE_URL}/newsletters/${id}`, {
+    await fetcher<void>(`${API_BASE_URL}/newsletters/${id}`, {
         method: 'DELETE',
-    });
-    if (!response.ok) {
-        throw new Error("Failed to delete newsletter");
-    }
+    }, "Failed to delete newsletter");
 }
 
 export async function getSettings(): Promise<Settings> {
-    const response = await fetch(`${API_BASE_URL}/imap/settings`);
-    if (!response.ok) {
-        throw new Error("Failed to fetch settings");
-    }
-    return response.json();
+    return fetcher<Settings>(`${API_BASE_URL}/imap/settings`, {}, "Failed to fetch settings");
 }
 
 export async function updateSettings(settings: SettingsCreate): Promise<Settings> {
-    const response = await fetch(`${API_BASE_URL}/imap/settings`, {
+    return fetcher<Settings>(`${API_BASE_URL}/imap/settings`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
         body: JSON.stringify(settings),
-    });
-    if (!response.ok) {
-        throw new Error("Failed to update settings");
-    }
-    return response.json();
+    }, "Failed to update settings");
 }
 
 export async function getImapFolders(): Promise<string[]> {
-    const response = await fetch(`${API_BASE_URL}/imap/folders`);
-    // If it fails, it's probably because settings are not configured. Return empty array.
-    if (!response.ok) {
-        return [];
-    }
-    return response.json();
+    return fetcher<string[]>(`${API_BASE_URL}/imap/folders`, {}, "Failed to fetch IMAP folders", true);
 }
 
 export async function testImapConnection(): Promise<{ message: string }> {
-    const response = await fetch(`${API_BASE_URL}/imap/test`, {
+    return fetcher<{ message: string }>(`${API_BASE_URL}/imap/test`, {
         method: 'POST',
-    });
-    if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.detail || "Failed to test IMAP connection");
-    }
-    return response.json();
+    }, "Failed to test IMAP connection");
 }
 
 export async function processEmails(): Promise<{ message: string }> {
-    const response = await fetch(`${API_BASE_URL}/imap/process`, {
+    return fetcher<{ message: string }>(`${API_BASE_URL}/imap/process`, {
         method: 'POST',
-    });
-    if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.detail || "Failed to process emails");
-    }
-    return response.json();
+    }, "Failed to process emails");
 }
 
 export function getFeedUrl(newsletterId: number): string {
