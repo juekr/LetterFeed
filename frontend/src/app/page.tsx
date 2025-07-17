@@ -12,8 +12,7 @@ import { LoadingSpinner } from "@/components/letterfeed/LoadingSpinner"
 import { Header } from "@/components/letterfeed/Header"
 import { NewsletterList } from "@/components/letterfeed/NewsletterList"
 import { EmptyState } from "@/components/letterfeed/EmptyState"
-import { AddNewsletterDialog } from "@/components/letterfeed/AddNewsletterDialog"
-import { EditNewsletterDialog } from "@/components/letterfeed/EditNewsletterDialog"
+import { NewsletterDialog } from "@/components/letterfeed/NewsletterDialog"
 import { SettingsDialog } from "@/components/letterfeed/SettingsDialog"
 
 export default function LetterFeedApp() {
@@ -24,7 +23,6 @@ export default function LetterFeedApp() {
 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [editingNewsletter, setEditingNewsletter] = useState<Newsletter | null>(null)
 
   const fetchData = useCallback(async () => {
@@ -50,7 +48,10 @@ export default function LetterFeedApp() {
 
   const openEditDialog = (newsletter: Newsletter) => {
     setEditingNewsletter(newsletter)
-    setIsEditDialogOpen(true)
+  }
+
+  const closeEditDialog = () => {
+    setEditingNewsletter(null)
   }
 
   if (isLoading) {
@@ -71,25 +72,23 @@ export default function LetterFeedApp() {
           <EmptyState onAddNewsletter={() => setIsAddDialogOpen(true)} />
         )}
 
-        <AddNewsletterDialog
+        <NewsletterDialog
           isOpen={isAddDialogOpen}
           folderOptions={folderOptions}
           onOpenChange={setIsAddDialogOpen}
           onSuccess={fetchData}
         />
 
-        {editingNewsletter && (
-          <EditNewsletterDialog
-            newsletter={editingNewsletter}
-            isOpen={isEditDialogOpen}
-            folderOptions={folderOptions}
-            onOpenChange={setIsEditDialogOpen}
-            onSuccess={() => {
-              setEditingNewsletter(null)
-              fetchData()
-            }}
-          />
-        )}
+        <NewsletterDialog
+          newsletter={editingNewsletter}
+          isOpen={!!editingNewsletter}
+          folderOptions={folderOptions}
+          onOpenChange={closeEditDialog}
+          onSuccess={() => {
+            closeEditDialog()
+            fetchData()
+          }}
+        />
 
         {settings && (
           <SettingsDialog

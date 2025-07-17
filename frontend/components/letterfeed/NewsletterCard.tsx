@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Rss, Mail, ExternalLink, Edit } from "lucide-react"
 import { Newsletter, getFeedUrl } from "@/lib/api"
-import { useEffect, useState } from "react"
 
 interface NewsletterCardProps {
   newsletter: Newsletter
@@ -11,16 +10,7 @@ interface NewsletterCardProps {
 }
 
 export function NewsletterCard({ newsletter, onEdit }: NewsletterCardProps) {
-  const [absoluteFeedUrl, setAbsoluteFeedUrl] = useState(getFeedUrl(newsletter.id))
-
-  useEffect(() => {
-    const url = getFeedUrl(newsletter.id)
-    if (url.startsWith("/")) {
-      setAbsoluteFeedUrl(`${window.location.origin}${url}`)
-    } else {
-      setAbsoluteFeedUrl(url)
-    }
-  }, [newsletter.id])
+  const feedUrl = getFeedUrl(newsletter.id)
 
   return (
     <Card className="hover:shadow-md transition-shadow flex flex-col">
@@ -32,8 +22,8 @@ export function NewsletterCard({ newsletter, onEdit }: NewsletterCardProps) {
               {newsletter.name}
             </CardTitle>
             <CardDescription>
-                      {newsletter.entries_count} entr{newsletter.entries_count !== 1 ? "ies" : "y"}
-                    </CardDescription>
+              {newsletter.entries_count} entr{newsletter.entries_count !== 1 ? "ies" : "y"}
+            </CardDescription>
           </div>
           <Button variant="ghost" size="icon" onClick={() => onEdit(newsletter)} aria-label="Edit Newsletter">
             <Edit className="w-4 h-4" />
@@ -58,13 +48,13 @@ export function NewsletterCard({ newsletter, onEdit }: NewsletterCardProps) {
         <div>
           <h4 className="text-sm font-medium text-gray-700 mb-2">RSS Feed</h4>
           <a
-            href={getFeedUrl(newsletter.id)}
+            href={feedUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 hover:underline"
           >
             <ExternalLink className="w-3 h-3" />
-            {absoluteFeedUrl}
+            {feedUrl}
           </a>
         </div>
       </CardContent>
