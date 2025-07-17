@@ -1,17 +1,28 @@
 # LetterFeed
 
-LetterFeed is a self-hosted application that converts email newsletters into RSS feeds. Kind of like [kill the newsletter](https://github.com/leafac/kill-the-newsletter/), but with a given inbox.
+LetterFeed is a self-hosted application that transforms your email newsletters into tidy, readable RSS feeds. It connects to your existing email account, finds the newsletters you specify, and generates a unique RSS feed for each one.
 
 <div align="center">
   <img src="./screenshot.png">
 </div>
+
+## Features
+
+- **Email to RSS Conversion:** Automatically converts emails from specified senders into a standard RSS feed.
+- **Content Extraction:** Optionally, LetterFeed can extract the main article content from the email body.
+- **Email Management:** Can automatically move processed emails to a specified folder in your inbox to keep things organized.
+- **Easy to Use Interface:** A simple web interface to manage your newsletters and feeds.
+
+## How It Works
+
+LetterFeed periodically scans your email inbox via IMAP for new emails from the senders you've configured. When it finds a new email, it processes it, and adds it as a new entry to the corresponding newsletter's RSS feed.
 
 ## Getting Started
 
 ### Prerequisites
 
 1. An existing mailbox with IMAP over SSL on port 993.
-2. Make sure you have Docker and Docker Compose installed on your system.
+2. Docker and Docker Compose installed on your system.
 
 ### Installation
 
@@ -102,7 +113,7 @@ services:
       - "traefik.http.routers.frontend-secure.entrypoints=websecure"
       - "traefik.http.routers.frontend-secure.tls.certresolver=myresolver"
       - "traefik.http.routers.frontend-secure.middlewares=frontend-auth@docker"
-      - "traefik.http.middlewares.frontend-auth.basicauth.users=test:$$apr1$$ruV6b18i$$9J0V2yJ94jL0g08xJ2Q0Q/"
+      - "traefik.http.middlewares.frontend-auth.basicauth.users=test:$apr1$ruV6b18i$9J0V2yJ94jL0g08xJ2Q0Q/"
 
     networks:
       - letterfeed_network
