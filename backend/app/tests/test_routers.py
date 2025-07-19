@@ -2,6 +2,10 @@ import uuid
 from unittest.mock import patch
 
 from fastapi.testclient import TestClient
+from sqlalchemy.orm import Session
+
+from app.crud.settings import create_or_update_settings
+from app.schemas.settings import SettingsCreate
 
 
 def test_health_check(client: TestClient):
@@ -11,12 +15,8 @@ def test_health_check(client: TestClient):
     assert response.json() == {"status": "ok"}
 
 
-@patch("app.core.imap.imaplib.IMAP4_SSL")
-def test_update_imap_settings(mock_imap, client: TestClient):
+def test_update_imap_settings(client: TestClient):
     """Test updating IMAP settings."""
-    mock_imap.return_value.login.return_value = (None, None)
-    mock_imap.return_value.logout.return_value = (None, None)
-
     settings_data = {
         "imap_server": "imap.example.com",
         "imap_username": "test@example.com",
@@ -34,12 +34,8 @@ def test_update_imap_settings(mock_imap, client: TestClient):
     assert response.json()["mark_as_read"]
 
 
-@patch("app.core.imap.imaplib.IMAP4_SSL")
-def test_get_imap_settings(mock_imap, client: TestClient):
+def test_get_imap_settings(client: TestClient):
     """Test getting IMAP settings."""
-    mock_imap.return_value.login.return_value = (None, None)
-    mock_imap.return_value.logout.return_value = (None, None)
-
     settings_data = {
         "imap_server": "imap.example.com",
         "imap_username": "test@example.com",
@@ -57,20 +53,20 @@ def test_get_imap_settings(mock_imap, client: TestClient):
 
 
 @patch("app.core.imap.imaplib.IMAP4_SSL")
-def test_test_imap_connection(mock_imap, client: TestClient):
+def test_test_imap_connection(mock_imap, client: TestClient, db_session: Session):
     """Test the IMAP connection."""
     mock_imap.return_value.login.return_value = (None, None)
     mock_imap.return_value.logout.return_value = (None, None)
 
-    settings_data = {
-        "imap_server": "imap.example.com",
-        "imap_username": "test@example.com",
-        "imap_password": "password",
-        "search_folder": "INBOX",
-        "move_to_folder": "Processed",
-        "mark_as_read": True,
-    }
-    client.post("/imap/settings", json=settings_data)
+    settings_data = SettingsCreate(
+        imap_server="imap.example.com",
+        imap_username="test@example.com",
+        imap_password="password",
+        search_folder="INBOX",
+        move_to_folder="Processed",
+        mark_as_read=True,
+    )
+    create_or_update_settings(db_session, settings_data)
 
     response = client.post("/imap/test")
     assert response.status_code == 200
@@ -78,7 +74,7 @@ def test_test_imap_connection(mock_imap, client: TestClient):
 
 
 @patch("app.core.imap.imaplib.IMAP4_SSL")
-def test_get_imap_folders(mock_imap, client: TestClient):
+def test_get_imap_folders(mock_imap, client: TestClient, db_session: Session):
     """Test getting IMAP folders."""
     mock_imap.return_value.login.return_value = (None, None)
     mock_imap.return_value.logout.return_value = (None, None)
@@ -87,15 +83,15 @@ def test_get_imap_folders(mock_imap, client: TestClient):
         [b'(NOCONNECT NOSELECT) "/" "INBOX"', b'(NOCONNECT NOSELECT) "/" "Processed"'],
     )
 
-    settings_data = {
-        "imap_server": "imap.example.com",
-        "imap_username": "test@example.com",
-        "imap_password": "password",
-        "search_folder": "INBOX",
-        "move_to_folder": "Processed",
-        "mark_as_read": True,
-    }
-    client.post("/imap/settings", json=settings_data)
+    settings_data = SettingsCreate(
+        imap_server="imap.example.com",
+        imap_username="test@example.com",
+        imap_password="password",
+        search_folder="INBOX",
+        move_to_folder="Processed",
+        mark_as_read=True,
+    )
+    create_or_update_settings(db_session, settings_data)
 
     response = client.get("/imap/folders")
     assert response.status_code == 200
@@ -141,7 +137,7 @@ def test_get_single_newsletter(client: TestClient):
     """Test getting a single newsletter."""
     unique_email = f"newsletter_{uuid.uuid4()}@example.com"
     newsletter_data = {"name": "Third Newsletter", "sender_emails": [unique_email]}
-    create_response = client.post("/newsletters/", json=newsletter_data)
+    create_response = client.post("/newsletters", json=newsletter_data)
     newsletter_id = create_response.json()["id"]
 
     response = client.get(f"/newsletters/{newsletter_id}")
@@ -151,7 +147,7 @@ def test_get_single_newsletter(client: TestClient):
 
 def test_get_nonexistent_newsletter(client: TestClient):
     """Test getting a nonexistent newsletter."""
-    response = client.get("/newsletters/999")
+    response = client.get("/newsletters/nonexistent")
     assert response.status_code == 404
     assert response.json() == {"detail": "Newsletter not found"}
 
@@ -160,7 +156,7 @@ def test_get_newsletter_feed(client: TestClient):
     """Test generating a newsletter feed."""
     unique_email = f"feed_test_{uuid.uuid4()}@example.com"
     newsletter_data = {"name": "Feed Test Newsletter", "sender_emails": [unique_email]}
-    create_response = client.post("/newsletters/", json=newsletter_data)
+    create_response = client.post("/newsletters", json=newsletter_data)
     newsletter_id = create_response.json()["id"]
 
     # Add some entries to the newsletter
@@ -195,6 +191,6 @@ def test_get_newsletter_feed(client: TestClient):
 
 def test_get_newsletter_feed_nonexistent_newsletter(client: TestClient):
     """Test generating a feed for a nonexistent newsletter."""
-    response = client.get("/feeds/999")
+    response = client.get("/feeds/nonexistent")
     assert response.status_code == 404
     assert response.json() == {"detail": "Newsletter not found"}

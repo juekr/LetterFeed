@@ -1,6 +1,8 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
+
+import withAuth from "@/components/withAuth"
 import {
   getNewsletters,
   getSettings,
@@ -15,7 +17,7 @@ import { EmptyState } from "@/components/letterfeed/EmptyState"
 import { NewsletterDialog } from "@/components/letterfeed/NewsletterDialog"
 import { SettingsDialog } from "@/components/letterfeed/SettingsDialog"
 
-export default function LetterFeedApp() {
+function LetterFeedApp() {
   const [newsletters, setNewsletters] = useState<Newsletter[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [settings, setSettings] = useState<AppSettings | null>(null)
@@ -103,3 +105,5 @@ export default function LetterFeedApp() {
     </div>
   )
 }
+
+export default withAuth(LetterFeedApp)

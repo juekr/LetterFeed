@@ -20,10 +20,19 @@ def test_create_or_update_settings(db_session: Session):
         search_folder="INBOX",
         move_to_folder="Archive",
         mark_as_read=True,
+        auth_username="user",
+        auth_password="password",
     )
     settings = create_or_update_settings(db_session, settings_data)
     assert settings.imap_server == "imap.test.com"
     assert settings.mark_as_read
+    assert settings.auth_username == "user"
+
+    # check password hash
+    from app.models.settings import Settings as SettingsModel
+
+    db_settings = db_session.query(SettingsModel).first()
+    assert db_settings.auth_password_hash is not None
 
     updated_settings_data = SettingsCreate(
         imap_server="imap.updated.com",
@@ -32,11 +41,13 @@ def test_create_or_update_settings(db_session: Session):
         search_folder="Inbox",
         move_to_folder=None,
         mark_as_read=False,
+        auth_username="new_user",
     )
     updated_settings = create_or_update_settings(db_session, updated_settings_data)
     assert updated_settings.imap_server == "imap.updated.com"
     assert not updated_settings.mark_as_read
     assert updated_settings.move_to_folder is None
+    assert updated_settings.auth_username == "new_user"
 
 
 def test_get_settings(db_session: Session):
@@ -62,6 +73,8 @@ def test_get_settings_with_env_override(db_session: Session):
         imap_username="db_user",
         imap_password="db_pass",
         email_check_interval=15,
+        auth_username="db_user",
+        auth_password="db_password",
     )
     create_or_update_settings(db_session, db_settings_data)
 
@@ -72,8 +85,11 @@ def test_get_settings_with_env_override(db_session: Session):
             "imap_username": "env_user",
             "imap_password": "env_pass",
             "email_check_interval": 30,
+            "auth_username": "env_auth_user",
+            "auth_password": "env_auth_password",
         }
         mock_env_settings.imap_password = "env_pass"
+        mock_env_settings.auth_password = "env_auth_password"
 
         # 3. Call get_settings and assert the override
         settings = get_settings(db_session, with_password=True)
@@ -81,8 +97,10 @@ def test_get_settings_with_env_override(db_session: Session):
         assert settings.imap_username == "env_user"
         assert settings.imap_password == "env_pass"
         assert settings.email_check_interval == 30
+        assert settings.auth_username == "env_auth_user"
         assert "imap_server" in settings.locked_fields
         assert "imap_username" in settings.locked_fields
+        assert "auth_username" in settings.locked_fields
 
         # 4. Call create_or_update_settings and assert that locked fields are not updated
         update_data = SettingsCreate(
@@ -90,11 +108,14 @@ def test_get_settings_with_env_override(db_session: Session):
             imap_username="new_user",
             imap_password="new_pass",
             email_check_interval=45,
+            auth_username="new_auth_user",
+            auth_password="new_auth_password",
         )
         updated_settings = create_or_update_settings(db_session, update_data)
         assert updated_settings.imap_server == "env.imap.com"  # Should not change
         assert updated_settings.imap_username == "env_user"  # Should not change
         assert updated_settings.email_check_interval == 30  # Should not change
+        assert updated_settings.auth_username == "env_auth_user"  # Should not change
 
 
 def test_create_newsletter(db_session: Session):

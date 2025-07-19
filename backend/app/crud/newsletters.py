@@ -86,16 +86,25 @@ def update_newsletter(
     db_newsletter.move_to_folder = newsletter_update.move_to_folder
     db_newsletter.extract_content = newsletter_update.extract_content
 
-    # Simple approach: delete existing senders and add new ones
+    # More efficient sender update
+    existing_emails = {sender.email for sender in db_newsletter.senders}
+    new_emails = set(newsletter_update.sender_emails)
+
+    # Remove senders that are no longer in the list
     for sender in db_newsletter.senders:
-        db.delete(sender)
-    db.commit()
+        if sender.email not in new_emails:
+            db.delete(sender)
 
-    for email in newsletter_update.sender_emails:
-        db_sender = Sender(id=generate(), email=email, newsletter_id=db_newsletter.id)
-        db.add(db_sender)
+    # Add new senders
+    for email in new_emails:
+        if email not in existing_emails:
+            db_sender = Sender(
+                id=generate(), email=email, newsletter_id=db_newsletter.id
+            )
+            db.add(db_sender)
 
     db.commit()
+    db.refresh(db_newsletter)
 
     logger.info(f"Successfully updated newsletter with id={db_newsletter.id}")
     return get_newsletter(db, newsletter_id)

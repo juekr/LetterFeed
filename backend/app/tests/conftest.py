@@ -1,6 +1,7 @@
 import os
 
 os.environ["LETTERFEED_DATABASE_URL"] = "sqlite:///./test.db"
+os.environ["LETTERFEED_SECRET_KEY"] = "testsecret"
 
 import pytest
 from fastapi.testclient import TestClient

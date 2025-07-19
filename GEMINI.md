@@ -25,9 +25,82 @@ Run `make` with these targets:
 
 ## Git Repo
 
-The main branch for this project is called "main"
+The main branch for this project is called "master"
 
-## JavaScript/TypeScript
+## Backend
+
+Of course. Here is a similar markdown for an AI agent on how to write Python code for a backend with FastAPI, SQLAlchemy, and Alembic:
+
+## Backend
+
+When contributing to this Python, FastAPI, and SQLAlchemy codebase, please adhere to the following principles to ensure the code is robust, maintainable, and performs well. The focus is on leveraging modern Python features, functional programming concepts, and the specific strengths of our chosen frameworks.
+
+### Prefer Functional Approaches and Data Classes over Traditional Classes
+
+While Python is a multi-paradigm language that fully supports object-oriented programming, for our backend services, we favor a more functional approach, especially for business logic and data handling.
+
+-   **Simplicity and Predictability**: Functions that operate on data are often simpler to reason about than classes with internal state and methods. This leads to more predictable code with fewer side effects. Pure functions, which always produce the same output for the same input and have no side effects, are the ideal.
+
+-   **Seamless FastAPI Integration**: FastAPI is designed around functions. Dependencies are injected into functions, and route handlers are functions. Writing your logic in functions aligns perfectly with this design, leading to cleaner and more idiomatic FastAPI code.
+
+-   **Data-Oriented Design with Pydantic**: Instead of creating complex classes to hold data, use Pydantic models. Pydantic provides data validation, serialization, and deserialization out of the box, all based on standard Python type hints. This is more declarative and less error-prone than manual implementation.
+
+-   **Reduced Boilerplate**: Traditional classes can introduce boilerplate like `__init__` methods, `self`, and method binding. For many tasks, simple functions operating on Pydantic models or dictionaries are more concise and just as effective.
+
+### Leveraging Python Modules for Encapsulation
+
+Python's module system is the primary way to organize and encapsulate code. We prefer using modules to control visibility over class-based access modifiers like `_` or `__`.
+
+-   **Clear Public API**: Anything you import from a module is part of its public API. Anything you don't is considered private. This is a simple and effective way to define module boundaries.
+
+-   **Enhanced Testability**: Test the public functions and interfaces of your modules. If you find yourself needing to test an "internal" function, consider if it should be part of the public API or if the module should be broken down further.
+
+-   **Reduced Coupling**: Well-defined modules with clear public APIs reduce coupling between different parts of the application, making it easier to refactor and maintain.
+
+### Static Typing with Pydantic and Type Hints
+
+Python's optional static typing is a powerful tool for writing robust and maintainable code. We use it extensively.
+
+-   **Avoid `Any`**: The `Any` type subverts the type checker. Avoid it whenever possible. If you have a truly unknown type, be explicit about how you handle it.
+
+-   **Leverage Pydantic for Validation**: Use Pydantic models for all data coming into and out of your API. This includes request bodies, query parameters, and response models. This ensures that your data is always in the expected shape.
+
+-   **Use Type Hints Everywhere**: All function signatures should have type hints. This improves readability and allows static analysis tools to catch errors before they happen in production.
+
+### Embracing Python's Built-in Data Structures and Comprehensions
+
+Python has a rich set of built-in data structures and powerful syntax for working with them.
+
+-   **List Comprehensions and Generator Expressions**: Prefer list comprehensions and generator expressions over `for` loops for creating lists and other collections. They are more concise and often more performant.
+
+-   **Use the Right Data Structure**: Understand the use cases for lists, tuples, sets, and dictionaries, and use the appropriate one for the task at hand.
+
+### FastAPI, SQLAlchemy, and Alembic Guidelines
+
+-   **Dependency Injection**: Use FastAPI's dependency injection system to manage resources like database sessions. This makes your code more testable and easier to reason about.
+
+-   **Database Sessions**: A database session should be created for each request and closed when the request is finished. The dependency injection system is the perfect place to manage this.
+
+-   **Asynchronous Code**: Use `async` and `await` for all I/O-bound operations, especially database queries. This is crucial for the performance of a FastAPI application.
+
+-   **SQLAlchemy ORM**: Use the SQLAlchemy ORM for all database interactions. Avoid raw SQL queries whenever possible to prevent SQL injection vulnerabilities. Define your models clearly, and use relationships to express the connections between your data.
+
+-   **Alembic Migrations**: All database schema changes must be accompanied by an Alembic migration script. Write clear and reversible migrations.
+
+### Process
+
+1.  **Analyze the User's Request**: Understand the desired functionality or change.
+2.  **Consult Best Practices**: Before writing code, think about the best way to implement the feature using the principles outlined above.
+3.  **Write Clear and Concise Code**: The code should be easy to read and understand.
+4.  **Provide Explanations**: When suggesting code, explain the reasoning behind the implementation and how it aligns with our best practices.
+
+### Optimization Guidelines
+
+-   **Efficient Database Queries**: Write efficient SQLAlchemy queries. Avoid the N+1 problem by using `joinedload` or `selectinload`.
+-   **Isolate Side Effects**: Keep side effects (like sending emails or interacting with external services) separate from your core business logic.
+-   **Structure for Concurrency**: Write your `async` code to take advantage of concurrency, running I/O-bound operations in parallel when possible.
+
+## Frontend
 
 When contributing to this React, Node, and TypeScript codebase, please prioritize the use of plain JavaScript objects with accompanying TypeScript interface or type declarations over JavaScript class syntax. This approach offers significant advantages, especially concerning interoperability with React and overall code maintainability.
 

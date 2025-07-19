@@ -167,8 +167,12 @@ def test_process_emails_auto_add_sender(mock_imap, db_session: Session):
 
 @patch("app.services.email_processor.imaplib.IMAP4_SSL")
 def test_process_emails_no_settings(mock_imap, db_session: Session):
-    """Test processing emails with no settings in the database."""
-    # No settings in the DB
+    """Test processing emails with no settings configured."""
+    # This test ensures that email processing is skipped if settings are not configured.
+    # In the new flow, initial settings are created at startup, so we call it here.
+    from app.crud.settings import create_initial_settings
+
+    create_initial_settings(db_session)
     process_emails(db_session)
     mock_imap.assert_not_called()
 

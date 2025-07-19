@@ -63,6 +63,14 @@ async function fetcher<T>(
     returnEmptyArrayOnFailure: boolean = false
 ): Promise<T> {
     try {
+        const token = localStorage.getItem("authToken");
+        if (token) {
+            options.headers = {
+                ...options.headers,
+                'Authorization': `Bearer ${token}`,
+            };
+        }
+
         const response = await fetch(url, options);
         if (!response.ok) {
             let errorText = `${errorMessagePrefix}: ${response.statusText}`;
@@ -74,11 +82,21 @@ async function fetcher<T>(
             } catch (e) { // eslint-disable-line @typescript-eslint/no-unused-vars
                 // ignore error if response is not JSON
             }
+
+            if (response.status === 401) {
+                localStorage.removeItem("authToken");
+                // Do not redirect here. The AuthContext will handle it.
+            }
+
             toast.error(errorText);
             if (returnEmptyArrayOnFailure) {
                 return [] as T;
             }
             throw new Error(errorText);
+        }
+        // For login or delete, we might not have a body
+        if (response.status === 204) {
+            return {} as T;
         }
         return response.json();
     } catch (error) {
@@ -91,6 +109,34 @@ async function fetcher<T>(
         throw error;
     }
 }
+
+export async function getAuthStatus(): Promise<{ auth_enabled: boolean }> {
+    return fetcher<{ auth_enabled: boolean }>(`${API_BASE_URL}/auth/status`, {}, "Failed to fetch auth status");
+}
+
+export async function login(username: string, password: string): Promise<void> {
+    const formData = new URLSearchParams();
+    formData.append('username', username);
+    formData.append('password', password);
+
+    try {
+        const response = await fetcher<{ access_token: string }>(`${API_BASE_URL}/auth/login`, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+        }, "Login failed");
+
+        if (response.access_token) {
+            localStorage.setItem("authToken", response.access_token);
+        }
+    } catch (error) {
+        localStorage.removeItem("authToken");
+        throw error;
+    }
+}
+
 
 export async function getNewsletters(): Promise<Newsletter[]> {
     return fetcher<Newsletter[]>(`${API_BASE_URL}/newsletters`, {}, "Failed to fetch newsletters");

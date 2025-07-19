@@ -13,12 +13,14 @@ class SettingsBase(BaseModel):
     mark_as_read: bool = False
     email_check_interval: int = 15
     auto_add_new_senders: bool = False
+    auth_username: str | None = None
 
 
 class SettingsCreate(SettingsBase):
     """Schema for creating or updating settings, including the IMAP password."""
 
     imap_password: str
+    auth_password: str | None = None
 
 
 class Settings(SettingsBase):
@@ -26,6 +28,7 @@ class Settings(SettingsBase):
 
     id: int
     imap_password: str | None = Field(None, exclude=True)
+    auth_password: str | None = Field(None, exclude=True)
     locked_fields: List[str] = []
 
     model_config = ConfigDict(from_attributes=True)

@@ -3,8 +3,14 @@ import { Header } from "../Header"
 import { Toaster } from "@/components/ui/sonner"
 import { toast } from "sonner"
 import * as api from "@/lib/api"
+import { AuthProvider } from "@/contexts/AuthContext"
 
 jest.mock("@/lib/api")
+jest.mock("next/navigation", () => ({
+  useRouter: () => ({
+    push: jest.fn(),
+  }),
+}))
 const mockedApi = api as jest.Mocked<typeof api>
 
 // Mock the toast functions
@@ -24,6 +30,10 @@ describe("Header", () => {
   const onOpenSettings = jest.fn()
   const consoleError = jest.spyOn(console, "error").mockImplementation(() => {})
 
+  const renderWithAuthProvider = (component: React.ReactElement) => {
+    return render(<AuthProvider>{component}</AuthProvider>)
+  }
+
   beforeEach(() => {
     jest.clearAllMocks()
     consoleError.mockClear()
@@ -34,7 +44,7 @@ describe("Header", () => {
   })
 
   it("renders the header with title and buttons", () => {
-    render(
+    renderWithAuthProvider(
       <Header
         onOpenAddNewsletter={onOpenAddNewsletter}
         onOpenSettings={onOpenSettings}
@@ -47,7 +57,7 @@ describe("Header", () => {
   })
 
   it('calls onOpenAddNewsletter when "Add Newsletter" button is clicked', () => {
-    render(
+    renderWithAuthProvider(
       <Header
         onOpenAddNewsletter={onOpenAddNewsletter}
         onOpenSettings={onOpenSettings}
@@ -58,7 +68,7 @@ describe("Header", () => {
   })
 
   it('calls onOpenSettings when "Settings" button is clicked', () => {
-    render(
+    renderWithAuthProvider(
       <Header
         onOpenAddNewsletter={onOpenAddNewsletter}
         onOpenSettings={onOpenSettings}
@@ -71,7 +81,7 @@ describe("Header", () => {
   it('calls the process emails API when "Process Now" button is clicked and shows success toast', async () => {
     mockedApi.processEmails.mockResolvedValue({ message: "Success" })
 
-    render(
+    renderWithAuthProvider(
       <>
         <Header
           onOpenAddNewsletter={onOpenAddNewsletter}
@@ -97,7 +107,7 @@ describe("Header", () => {
   it("shows an error toast if the process emails API call fails", async () => {
     mockedApi.processEmails.mockRejectedValue(new Error("Failed to process"))
 
-    render(
+    renderWithAuthProvider(
       <>
         <Header
           onOpenAddNewsletter={onOpenAddNewsletter}

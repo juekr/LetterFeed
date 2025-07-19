@@ -2,7 +2,8 @@
 
 import { Button } from "@/components/ui/button"
 import { processEmails } from "@/lib/api"
-import { Mail, Plus, Settings } from "lucide-react"
+import { useAuth } from "@/hooks/useAuth"
+import { LogOut, Mail, Plus, Settings } from "lucide-react"
 import Image from "next/image"
 import { toast } from "sonner"
 
@@ -12,6 +13,7 @@ interface HeaderProps {
 }
 
 export function Header({ onOpenAddNewsletter, onOpenSettings }: HeaderProps) {
+  const { logout } = useAuth()
   const handleProcessEmails = async () => {
     try {
       await processEmails()
@@ -58,6 +60,11 @@ export function Header({ onOpenAddNewsletter, onOpenSettings }: HeaderProps) {
         <Button variant="outline" onClick={onOpenSettings}>
           <Settings className="w-4 h-4 mr-2" />
           Settings
+        </Button>
+
+        <Button variant="outline" onClick={logout}>
+          <LogOut className="w-4 h-4 mr-2" />
+          Logout
         </Button>
       </div>
     </div>

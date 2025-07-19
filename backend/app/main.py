@@ -1,12 +1,14 @@
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.core.database import Base, engine
+from app.core.auth import protected_route
+from app.core.database import Base, SessionLocal, engine
 from app.core.logging import get_logger, setup_logging
 from app.core.scheduler import scheduler, start_scheduler_with_interval
-from app.routers import feeds, health, imap, newsletters
+from app.crud.settings import create_initial_settings
+from app.routers import auth, feeds, health, imap, newsletters
 
 
 @asynccontextmanager
@@ -19,6 +21,10 @@ async def lifespan(app: FastAPI):
     logger.info(f"DATABASE_URL used: {settings.database_url}")
     logger.info("Starting up Letterfeed backend...")
     Base.metadata.create_all(bind=engine)
+
+    with SessionLocal() as db:
+        create_initial_settings(db)
+
     start_scheduler_with_interval()
     yield
     if scheduler.running:
@@ -43,6 +49,7 @@ app.add_middleware(
 )
 
 app.include_router(health.router)
-app.include_router(imap.router)
-app.include_router(newsletters.router)
+app.include_router(auth.router)
+app.include_router(imap.router, dependencies=[Depends(protected_route)])
+app.include_router(newsletters.router, dependencies=[Depends(protected_route)])
 app.include_router(feeds.router)

@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 
 from app.core.config import settings as env_settings
+from app.core.hashing import get_password_hash
 from app.core.logging import get_logger
 from app.models.settings import Settings as SettingsModel
 from app.schemas.settings import Settings as SettingsSchema
@@ -9,11 +10,10 @@ from app.schemas.settings import SettingsCreate
 logger = get_logger(__name__)
 
 
-def get_settings(db: Session, with_password: bool = False) -> SettingsSchema:
-    """Retrieve application settings, prioritizing environment variables over database."""
-    logger.debug("Querying for settings")
+def create_initial_settings(db: Session):
+    """Create initial settings in the database if they don't exist."""
+    logger.debug("Checking for initial settings.")
     db_settings = db.query(SettingsModel).first()
-
     if not db_settings:
         logger.info(
             "No settings found in the database, creating new default settings from environment variables."
@@ -25,11 +25,28 @@ def get_settings(db: Session, with_password: bool = False) -> SettingsSchema:
             k: v for k, v in env_settings.model_dump().items() if k in model_fields
         }
 
+        if env_settings.auth_password:
+            env_data_for_db["auth_password_hash"] = get_password_hash(
+                env_settings.auth_password
+            )
+        if "auth_password" in env_data_for_db:
+            del env_data_for_db["auth_password"]
+
         db_settings = SettingsModel(**env_data_for_db)
         db.add(db_settings)
         db.commit()
         db.refresh(db_settings)
         logger.info("Default settings created from environment variables.")
+
+
+def get_settings(db: Session, with_password: bool = False) -> SettingsSchema:
+    """Retrieve application settings, prioritizing environment variables over database."""
+    logger.debug("Querying for settings")
+    db_settings = db.query(SettingsModel).first()
+
+    if not db_settings:
+        # This should not happen if create_initial_settings is called at startup.
+        raise RuntimeError("Settings not initialized.")
 
     # Build dictionary from DB model attributes, handling possible None values
     db_data = {
@@ -41,6 +58,7 @@ def get_settings(db: Session, with_password: bool = False) -> SettingsSchema:
         "mark_as_read": db_settings.mark_as_read,
         "email_check_interval": db_settings.email_check_interval,
         "auto_add_new_senders": db_settings.auto_add_new_senders,
+        "auth_username": db_settings.auth_username,
     }
 
     # Get all environment settings that were explicitly set.
@@ -80,14 +98,22 @@ def create_or_update_settings(db: Session, settings: SettingsCreate):
         db_settings = SettingsModel()
         db.add(db_settings)
 
-    update_data = settings.model_dump()
+    update_data = settings.model_dump(exclude_unset=True)
 
     # Do not update fields that are set by environment variables
     locked_fields = list(env_settings.model_dump(exclude_unset=True).keys())
     logger.debug(f"Fields locked by environment variables: {locked_fields}")
 
     for key, value in update_data.items():
-        if key not in locked_fields:
+        if key in locked_fields:
+            continue
+
+        if key == "auth_password":
+            if value:
+                db_settings.auth_password_hash = get_password_hash(value)
+            else:
+                db_settings.auth_password_hash = None
+        elif hasattr(db_settings, key):
             setattr(db_settings, key, value)
 
     db.commit()
