@@ -13,7 +13,7 @@ interface HeaderProps {
 }
 
 export function Header({ onOpenAddNewsletter, onOpenSettings }: HeaderProps) {
-  const { logout } = useAuth()
+  const { logout, isAuthEnabled } = useAuth()
   const handleProcessEmails = async () => {
     try {
       await processEmails()
@@ -62,10 +62,12 @@ export function Header({ onOpenAddNewsletter, onOpenSettings }: HeaderProps) {
           Settings
         </Button>
 
-        <Button variant="outline" onClick={logout}>
-          <LogOut className="w-4 h-4 mr-2" />
-          Logout
-        </Button>
+        {isAuthEnabled && (
+          <Button variant="outline" onClick={logout}>
+            <LogOut className="w-4 h-4 mr-2" />
+            Logout
+          </Button>
+        )}
       </div>
     </div>
   )

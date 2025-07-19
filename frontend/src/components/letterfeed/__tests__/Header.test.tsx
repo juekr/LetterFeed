@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/sonner"
 import { toast } from "sonner"
 import * as api from "@/lib/api"
 import { AuthProvider } from "@/contexts/AuthContext"
+import { useAuth } from "@/hooks/useAuth"
 
 jest.mock("@/lib/api")
 jest.mock("next/navigation", () => ({
@@ -11,7 +12,10 @@ jest.mock("next/navigation", () => ({
     push: jest.fn(),
   }),
 }))
+jest.mock("@/hooks/useAuth")
+
 const mockedApi = api as jest.Mocked<typeof api>
+const mockedUseAuth = useAuth as jest.Mock
 
 // Mock the toast functions
 jest.mock("sonner", () => {
@@ -28,6 +32,7 @@ jest.mock("sonner", () => {
 describe("Header", () => {
   const onOpenAddNewsletter = jest.fn()
   const onOpenSettings = jest.fn()
+  const logout = jest.fn()
   const consoleError = jest.spyOn(console, "error").mockImplementation(() => {})
 
   const renderWithAuthProvider = (component: React.ReactElement) => {
@@ -37,14 +42,18 @@ describe("Header", () => {
   beforeEach(() => {
     jest.clearAllMocks()
     consoleError.mockClear()
+    mockedUseAuth.mockReturnValue({
+      logout,
+      isAuthEnabled: true, // Default to auth being enabled for most tests
+    })
   })
 
   afterAll(() => {
     consoleError.mockRestore()
   })
 
-  it("renders the header with title and buttons", () => {
-    renderWithAuthProvider(
+  it("renders the header with title and buttons including logout", () => {
+    render(
       <Header
         onOpenAddNewsletter={onOpenAddNewsletter}
         onOpenSettings={onOpenSettings}
@@ -54,10 +63,25 @@ describe("Header", () => {
     expect(screen.getByText("Add Newsletter")).toBeInTheDocument()
     expect(screen.getByText("Settings")).toBeInTheDocument()
     expect(screen.getByText("Process Now")).toBeInTheDocument()
+    expect(screen.getByText("Logout")).toBeInTheDocument()
+  })
+
+  it("does not render the logout button if auth is disabled", () => {
+    mockedUseAuth.mockReturnValue({
+      logout,
+      isAuthEnabled: false,
+    })
+    render(
+      <Header
+        onOpenAddNewsletter={onOpenAddNewsletter}
+        onOpenSettings={onOpenSettings}
+      />
+    )
+    expect(screen.queryByText("Logout")).not.toBeInTheDocument()
   })
 
   it('calls onOpenAddNewsletter when "Add Newsletter" button is clicked', () => {
-    renderWithAuthProvider(
+    render(
       <Header
         onOpenAddNewsletter={onOpenAddNewsletter}
         onOpenSettings={onOpenSettings}
@@ -68,7 +92,7 @@ describe("Header", () => {
   })
 
   it('calls onOpenSettings when "Settings" button is clicked', () => {
-    renderWithAuthProvider(
+    render(
       <Header
         onOpenAddNewsletter={onOpenAddNewsletter}
         onOpenSettings={onOpenSettings}
@@ -81,7 +105,7 @@ describe("Header", () => {
   it('calls the process emails API when "Process Now" button is clicked and shows success toast', async () => {
     mockedApi.processEmails.mockResolvedValue({ message: "Success" })
 
-    renderWithAuthProvider(
+    render(
       <>
         <Header
           onOpenAddNewsletter={onOpenAddNewsletter}
@@ -107,7 +131,7 @@ describe("Header", () => {
   it("shows an error toast if the process emails API call fails", async () => {
     mockedApi.processEmails.mockRejectedValue(new Error("Failed to process"))
 
-    renderWithAuthProvider(
+    render(
       <>
         <Header
           onOpenAddNewsletter={onOpenAddNewsletter}

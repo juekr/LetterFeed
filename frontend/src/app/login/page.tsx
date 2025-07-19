@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -9,11 +9,20 @@ import { Label } from "@/components/ui/label"
 import Image from "next/image"
 import { useAuth } from "@/hooks/useAuth"
 import { toast } from "sonner"
+import { useRouter } from "next/navigation"
+import { LoadingSpinner } from "@/components/letterfeed/LoadingSpinner"
 
 export default function LoginPage() {
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
-  const { login } = useAuth()
+  const { login, isAuthenticated, isLoading } = useAuth()
+  const router = useRouter()
+
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      router.push("/")
+    }
+  }, [isLoading, isAuthenticated, router])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -25,9 +34,13 @@ export default function LoginPage() {
 
     try {
       await login(username, password)
-    } catch  {
+    } catch {
       // The error is already toasted by the API layer,
     }
+  }
+
+  if (isLoading || (!isLoading && isAuthenticated)) {
+    return <LoadingSpinner />
   }
 
   return (

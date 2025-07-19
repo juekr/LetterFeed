@@ -3,32 +3,65 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react"
 import "@testing-library/jest-dom"
 import LoginPage from "@/app/login/page"
 import { useAuth } from "@/hooks/useAuth"
+import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 
+// Mock the necessary hooks and modules
 jest.mock("@/hooks/useAuth")
 jest.mock("sonner", () => ({
   toast: {
     error: jest.fn(),
   },
 }))
+jest.mock("next/navigation", () => ({
+  useRouter: jest.fn(),
+}))
 
 const mockedUseAuth = useAuth as jest.Mock
 const mockedToast = toast as jest.Mocked<typeof toast>
+const mockedUseRouter = useRouter as jest.Mock
 
 describe("LoginPage", () => {
   const login = jest.fn()
 
   beforeEach(() => {
     jest.clearAllMocks()
-    mockedUseAuth.mockReturnValue({ login })
+    // Default mock for useAuth
+    mockedUseAuth.mockReturnValue({
+      login,
+      isAuthenticated: false,
+      isLoading: false,
+    })
   })
 
-  it("renders the login page", () => {
+  it("renders the login page when not authenticated", () => {
     render(<LoginPage />)
     expect(screen.getByText("LetterFeed")).toBeInTheDocument()
     expect(screen.getByLabelText("Username")).toBeInTheDocument()
     expect(screen.getByLabelText("Password")).toBeInTheDocument()
     expect(screen.getByRole("button", { name: "Sign In" })).toBeInTheDocument()
+  })
+
+  it("shows loading spinner when isLoading is true", () => {
+    mockedUseAuth.mockReturnValue({
+      login,
+      isAuthenticated: false,
+      isLoading: true,
+    })
+    render(<LoginPage />)
+    expect(screen.getByTestId("loading-spinner")).toBeInTheDocument()
+  })
+
+  it("redirects when authenticated", () => {
+    const push = jest.fn()
+    mockedUseRouter.mockReturnValue({ push })
+    mockedUseAuth.mockReturnValue({
+      login,
+      isAuthenticated: true,
+      isLoading: false,
+    })
+    render(<LoginPage />)
+    expect(push).toHaveBeenCalledWith("/")
   })
 
   it("allows typing in the username and password fields", () => {

@@ -28,21 +28,27 @@ describe("AuthContext", () => {
     consoleError.mockRestore()
   })
 
-  it("authenticates if auth is not enabled", async () => {
+  it("authenticates and sets auth enabled to false if auth is not enabled on server", async () => {
     mockedApi.getAuthStatus.mockResolvedValue({ auth_enabled: false })
     render(
       <AuthProvider>
         <AuthContext.Consumer>
           {(value) => (
-            <span>
-              Is Authenticated: {value?.isAuthenticated.toString()}
-            </span>
+            <div>
+              <span>
+                Is Authenticated: {value?.isAuthenticated.toString()}
+              </span>
+              <span>
+                Is Auth Enabled: {value?.isAuthEnabled.toString()}
+              </span>
+            </div>
           )}
         </AuthContext.Consumer>
       </AuthProvider>
     )
     await waitFor(() => {
       expect(screen.getByText("Is Authenticated: true")).toBeInTheDocument()
+      expect(screen.getByText("Is Auth Enabled: false")).toBeInTheDocument()
     })
   })
 
@@ -54,15 +60,21 @@ describe("AuthContext", () => {
       <AuthProvider>
         <AuthContext.Consumer>
           {(value) => (
-            <span>
-              Is Authenticated: {value?.isAuthenticated.toString()}
-            </span>
+            <div>
+              <span>
+                Is Authenticated: {value?.isAuthenticated.toString()}
+              </span>
+              <span>
+                Is Auth Enabled: {value?.isAuthEnabled.toString()}
+              </span>
+            </div>
           )}
         </AuthContext.Consumer>
       </AuthProvider>
     )
     await waitFor(() => {
       expect(screen.getByText("Is Authenticated: true")).toBeInTheDocument()
+      expect(screen.getByText("Is Auth Enabled: true")).toBeInTheDocument()
     })
   })
 

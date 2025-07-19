@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation"
 
 interface AuthContextType {
   isAuthenticated: boolean
+  isAuthEnabled: boolean
   login: (username: string, password: string) => Promise<void>
   logout: () => void
   isLoading: boolean
@@ -15,6 +16,7 @@ export const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [isAuthEnabled, setIsAuthEnabled] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
 
@@ -23,6 +25,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setIsLoading(true);
       try {
         const { auth_enabled } = await getAuthStatus();
+        setIsAuthEnabled(auth_enabled);
         if (!auth_enabled) {
           setIsAuthenticated(true);
         } else {
@@ -67,7 +70,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, login, logout, isLoading }}>
+    <AuthContext.Provider value={{ isAuthenticated, isAuthEnabled, login, logout, isLoading }}>
       {children}
     </AuthContext.Provider>
   )
