@@ -12,6 +12,7 @@ LetterFeed is a self-hosted application that transforms your email newsletters i
 - **Content Extraction:** Optionally, LetterFeed can extract the main article content from the email body.
 - **Email Management:** Can automatically move processed emails to a specified folder in your inbox to keep things organized.
 - **Easy to Use Interface:** A simple web interface to manage your newsletters and feeds.
+- **Authentication:** Optional username + password auth.
 
 ## How It Works
 

@@ -16,10 +16,12 @@ def generate_feed(db: Session, newsletter_id: str):
     entries = get_entries_by_newsletter(db, newsletter_id)
 
     feed_url = f"{settings.app_base_url}/feeds/{newsletter_id}"
+    logo_url = f"{settings.app_base_url}/logo.png"
 
     fg = FeedGenerator()
     fg.id(f"urn:letterfeed:newsletter:{newsletter.id}")
     fg.title(newsletter.name)
+    fg.logo(logo_url)
     fg.link(href=feed_url, rel="self")
     sender_emails = ", ".join([s.email for s in newsletter.senders])
     fg.description(f"A feed of newsletters from {sender_emails}")
