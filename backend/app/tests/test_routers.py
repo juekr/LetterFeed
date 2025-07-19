@@ -185,6 +185,9 @@ def test_get_newsletter_feed(client: TestClient):
     logo = root.find("atom:logo", ns)
     assert logo is not None
     assert logo.text == "http://localhost:8000/logo.png"
+    icon = root.find("atom:icon", ns)
+    assert icon is not None
+    assert icon.text == "http://localhost:8000/favicon.ico"
     entry_titles = [
         entry.find("atom:title", ns).text for entry in root.findall("atom:entry", ns)
     ]
