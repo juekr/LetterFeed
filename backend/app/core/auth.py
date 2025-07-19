@@ -46,6 +46,8 @@ def _get_auth_credentials(db: Session) -> dict:
 
 def create_access_token(data: dict, expires_delta: timedelta | None = None):
     """Create a new access token."""
+    if not env_settings.secret_key:
+        raise ValueError("SECRET_KEY is not set, cannot create access tokens.")
     to_encode = data.copy()
     if expires_delta:
         expire = datetime.now(UTC) + expires_delta
@@ -81,6 +83,14 @@ def protected_route(
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
+
+    if not env_settings.secret_key:
+        # This is an internal server error because auth is configured but the key is missing.
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="SECRET_KEY is not configured on the server.",
+        )
+
     try:
         payload = jwt.decode(
             token, env_settings.secret_key, algorithms=[env_settings.algorithm]

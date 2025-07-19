@@ -29,8 +29,9 @@ class Settings(BaseSettings):
     auto_add_new_senders: bool = False
     auth_username: str | None = None
     auth_password: str | None = None
-    secret_key: str = Field(
-        ..., validation_alias=AliasChoices("SECRET_KEY", "LETTERFEED_SECRET_KEY")
+    secret_key: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices("SECRET_KEY", "LETTERFEED_SECRET_KEY"),
     )
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
