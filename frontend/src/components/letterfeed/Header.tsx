@@ -39,8 +39,8 @@ export function Header({ onOpenAddNewsletter, onOpenSettings }: HeaderProps) {
           className="rounded-lg"
         />
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">LetterFeed</h1>
-          <p className="text-gray-600 mt-1 hidden md:block">
+          <h1 className="text-2xl md:text-3xl font-bold text-foreground">LetterFeed</h1>
+          <p className="text-muted-foreground mt-1 hidden md:block">
             Newsletters as RSS feeds
           </p>
         </div>
