@@ -182,6 +182,11 @@ def test_get_newsletter_feed(client: TestClient):
     root = ET.fromstring(response.text)
     # Atom feed uses a namespace, so we need to include it in our tag searches
     ns = {"atom": "http://www.w3.org/2005/Atom"}
+    links = root.findall("atom:link", ns)
+    assert any(
+        link.get("rel") == "alternate" and link.get("href") == "http://localhost:8000"
+        for link in links
+    )
     logo = root.find("atom:logo", ns)
     assert logo is not None
     assert logo.text == "http://localhost:8000/logo.png"

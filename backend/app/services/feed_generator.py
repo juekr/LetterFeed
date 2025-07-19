@@ -25,6 +25,7 @@ def generate_feed(db: Session, newsletter_id: str):
     fg.logo(logo_url)
     fg.icon(icon_url)
     fg.link(href=feed_url, rel="self")
+    fg.link(href=settings.app_base_url, rel="alternate")
     sender_emails = ", ".join([s.email for s in newsletter.senders])
     fg.description(f"A feed of newsletters from {sender_emails}")
 
