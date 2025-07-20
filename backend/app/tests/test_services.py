@@ -40,7 +40,7 @@ def test_generate_feed(db_session: Session):
     # In a real scenario, you'd use an XML parser to validate structure and content more thoroughly
     assert f"<title>{newsletter.name}</title>" in feed_xml.decode()
     assert f"<id>urn:letterfeed:newsletter:{newsletter.id}</id>" in feed_xml.decode()
-    assert '<link href="http://localhost:8000" rel="alternate"/>' in feed_xml.decode()
+    assert '<link href="http://localhost:8000/" rel="alternate"/>' in feed_xml.decode()
     assert "<logo>http://localhost:8000/logo.png</logo>" in feed_xml.decode()
     assert "<icon>http://localhost:8000/favicon.ico</icon>" in feed_xml.decode()
     assert "<title>First Entry</title>" in feed_xml.decode()

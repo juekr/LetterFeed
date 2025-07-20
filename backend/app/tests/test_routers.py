@@ -184,7 +184,7 @@ def test_get_newsletter_feed(client: TestClient):
     ns = {"atom": "http://www.w3.org/2005/Atom"}
     links = root.findall("atom:link", ns)
     assert any(
-        link.get("rel") == "alternate" and link.get("href") == "http://localhost:8000"
+        link.get("rel") == "alternate" and link.get("href") == "http://localhost:8000/"
         for link in links
     )
     logo = root.find("atom:logo", ns)
