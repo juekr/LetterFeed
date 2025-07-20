@@ -4,7 +4,7 @@ from app.core.database import Base
 
 
 class Settings(Base):
-    """Represents application settings, including IMAP configuration."""
+    """Represents application settings."""
 
     __tablename__ = "settings"
 

@@ -1,6 +1,6 @@
 [project]
 name = "letterfeed-backend"
-version = "0.1.0"
+version = "0.4.0"
 description = "Backend for LetterFeed"
 readme = "README.md"
 requires-python = ">=3.13"

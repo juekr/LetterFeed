@@ -56,27 +56,20 @@ def _fetch_unread_email_ids(mail: imaplib.IMAP4_SSL) -> list[str]:
 
 def _get_email_body(msg: Message) -> str:
     """Extract body from an email message."""
-    body, html = "", ""
+    body = ""
     for part in msg.walk():
         ctype = part.get_content_type()
         cdispo = str(part.get("Content-Disposition"))
         if "attachment" in cdispo:
             continue
-        if ctype == "text/plain":
+        if ctype in ["text/plain", "text/html"]:
             try:
                 payload = part.get_payload(decode=True)
                 charset = part.get_content_charset() or "utf-8"
                 body = payload.decode(charset, "ignore")
             except Exception:
                 pass
-        elif ctype == "text/html":
-            try:
-                payload = part.get_payload(decode=True)
-                charset = part.get_content_charset() or "utf-8"
-                html = payload.decode(charset, "ignore")
-            except Exception:
-                pass
-    return html or body
+    return body
 
 
 def _auto_add_newsletter(
