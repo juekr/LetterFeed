@@ -184,15 +184,15 @@ def test_get_newsletter_feed(client: TestClient):
     ns = {"atom": "http://www.w3.org/2005/Atom"}
     links = root.findall("atom:link", ns)
     assert any(
-        link.get("rel") == "alternate" and link.get("href") == "http://localhost:8000/"
+        link.get("rel") == "alternate" and link.get("href") == "http://backend:8000/"
         for link in links
     )
     logo = root.find("atom:logo", ns)
     assert logo is not None
-    assert logo.text == "http://localhost:8000/logo.png"
+    assert logo.text == "http://backend:8000/logo.png"
     icon = root.find("atom:icon", ns)
     assert icon is not None
-    assert icon.text == "http://localhost:8000/favicon.ico"
+    assert icon.text == "http://backend:8000/favicon.ico"
     entry_titles = [
         entry.find("atom:title", ns).text for entry in root.findall("atom:entry", ns)
     ]
