@@ -1,4 +1,5 @@
 import email
+import html
 import imaplib
 from email.header import decode_header, make_header
 from email.message import Message
@@ -69,7 +70,7 @@ def _get_email_body(msg: Message) -> str:
                 body = payload.decode(charset, "ignore")
             except Exception:
                 pass
-    return body
+    return html.unescape(body)
 
 
 def _auto_add_newsletter(
