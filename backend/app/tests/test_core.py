@@ -79,7 +79,7 @@ def test_process_emails(mock_imap, db_session: Session):
     mock_mail.login.assert_called_once_with("test@test.com", "password")
     mock_mail.select.assert_called_once_with("INBOX")
     mock_mail.search.assert_called_once_with(None, "(UNSEEN)")
-    mock_mail.fetch.assert_called_once_with(b"1", "(RFC822)")
+    mock_mail.fetch.assert_called_once_with(b"1", "(BODY.PEEK[])")
     mock_mail.store.assert_any_call(b"1", "+FLAGS", "\\Seen")
     mock_mail.copy.assert_called_once_with(b"1", "Processed")
     mock_mail.store.assert_any_call(b"1", "+FLAGS", "\\Deleted")

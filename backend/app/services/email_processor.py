@@ -92,7 +92,7 @@ def _process_single_email(
     settings: Settings,
 ) -> None:
     """Process a single email message."""
-    status, data = mail.fetch(num, "(RFC822)")
+    status, data = mail.fetch(num, "(BODY.PEEK[])")
     if status != "OK":
         logger.warning(f"Failed to fetch email with id={num}")
         return
@@ -129,8 +129,15 @@ def _process_single_email(
         if extracted_body:
             final_body = extracted_body
 
-    entry = EntryCreate(subject=subject, body=final_body, message_id=message_id)
-    create_entry(db, entry, newsletter.id)
+    entry_schema = EntryCreate(subject=subject, body=final_body, message_id=message_id)
+    new_entry = create_entry(db, entry_schema, newsletter.id)
+
+    if not new_entry:
+        logger.error(
+            f"Failed to create entry for newsletter '{newsletter.name}' from sender {sender}, email will not be marked as read or moved."
+        )
+        return
+
     logger.info(
         f"Created new entry for newsletter '{newsletter.name}' from sender {sender}"
     )
