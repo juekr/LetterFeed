@@ -1,5 +1,4 @@
 from logging.config import fileConfig
-import os
 
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
@@ -18,7 +17,7 @@ if config.config_file_name is not None:
 # add your model's MetaData object here
 # for 'autogenerate' support
 from app.core.database import Base
-from app.models import newsletters, entries, settings # noqa
+from app.core.config import settings as app_settings
 
 target_metadata = Base.metadata
 
@@ -40,10 +39,7 @@ def run_migrations_offline() -> None:
     script output.
 
     """
-    url = os.environ.get("DATABASE_URL") or os.environ.get("LETTERFEED_DATABASE_URL")
-    if url is None:
-        url = config.get_main_option("sqlalchemy.url")
-
+    url = app_settings.database_url
     context.configure(
         url=url,
         target_metadata=target_metadata,
@@ -62,26 +58,16 @@ def run_migrations_online() -> None:
     and associate a connection with the context.
 
     """
-    connectable = None
-    database_url = os.environ.get("DATABASE_URL") or os.environ.get("LETTERFEED_DATABASE_URL")
-
-    if database_url:
-        connectable = engine_from_config(
-            {"sqlalchemy.url": database_url},
-            prefix="sqlalchemy.",
-            poolclass=pool.NullPool,
-        )
-    else:
-        connectable = engine_from_config(
-            config.get_section(config.config_ini_section, {}),
-            prefix="sqlalchemy.",
-            poolclass=pool.NullPool,
-        )
+    configuration = config.get_section(config.config_ini_section, {})
+    configuration["sqlalchemy.url"] = app_settings.database_url
+    connectable = engine_from_config(
+        configuration,
+        prefix="sqlalchemy.",
+        poolclass=pool.NullPool,
+    )
 
     with connectable.connect() as connection:
-        context.configure(
-            connection=connection, target_metadata=target_metadata
-        )
+        context.configure(connection=connection, target_metadata=target_metadata)
 
         with context.begin_transaction():
             context.run_migrations()
