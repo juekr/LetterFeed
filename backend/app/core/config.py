@@ -16,7 +16,7 @@ class Settings(BaseSettings):
         validation_alias=AliasChoices("DATABASE_URL", "LETTERFEED_DATABASE_URL"),
     )
     app_base_url: str = Field(
-        "http://localhost:8000",
+        "http://backend:8000",
         validation_alias=AliasChoices("APP_BASE_URL", "LETTERFEED_APP_BASE_URL"),
     )
     imap_server: str = ""
