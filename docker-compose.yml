@@ -12,6 +12,8 @@ services:
   frontend:
     image: ghcr.io/leonmuscoden/letterfeed-frontend:latest
     restart: unless-stopped
+    env_file:
+      - .env
     ports:
       - "3000:3000"
     depends_on:
