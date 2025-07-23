@@ -11,6 +11,11 @@ class Settings(BaseSettings):
         env_file=".env", extra="ignore", env_prefix="LETTERFEED_", frozen=True
     )
 
+    production: bool = Field(
+        False,
+        validation_alias=AliasChoices("PRODUCTION", "LETTERFEED_PRODUCTION"),
+    )
+
     database_url: str = Field(
         "sqlite:////data/letterfeed.db",
         validation_alias=AliasChoices("DATABASE_URL", "LETTERFEED_DATABASE_URL"),

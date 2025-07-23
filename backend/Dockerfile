@@ -18,5 +18,6 @@ WORKDIR /app
 
 EXPOSE 8000
 
+ENV LETTERFEED_PRODUCTION=true
 ENV PATH="/app/.venv/bin:$PATH"
 CMD ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"]

@@ -4,6 +4,7 @@ from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.auth import protected_route
+from app.core.config import settings
 from app.core.database import Base, SessionLocal, engine
 from app.core.logging import get_logger, setup_logging
 from app.core.scheduler import scheduler, start_scheduler_with_interval
@@ -16,7 +17,6 @@ async def lifespan(app: FastAPI):
     """Handle application startup and shutdown events."""
     setup_logging()
     logger = get_logger(__name__)
-    from app.core.config import settings
 
     logger.info(f"DATABASE_URL used: {settings.database_url}")
     logger.info("Starting up Letterfeed backend...")
@@ -33,7 +33,12 @@ async def lifespan(app: FastAPI):
     logger.info("...Letterfeed backend shut down.")
 
 
-app = FastAPI(lifespan=lifespan)
+# Disable docs in production
+fastapi_kwargs = {}
+if settings.production:
+    fastapi_kwargs.update({"docs_url": None, "redoc_url": None, "openapi_url": None})
+
+app = FastAPI(lifespan=lifespan, **fastapi_kwargs)
 
 # CORS Middleware
 app.add_middleware(
