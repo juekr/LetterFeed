@@ -46,7 +46,7 @@ const mockFetchError = (data: any = {}, statusText = "Bad Request", status = 400
 }
 
 describe("API Functions", () => {
-  const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL
+  const API_BASE_URL = '/api'
 
   beforeEach(() => {
     // Reset the mock before each test
