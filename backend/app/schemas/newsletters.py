@@ -1,6 +1,8 @@
 from typing import List
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, field_validator
+
+from app.core.slug import sanitize_slug
 
 
 class SenderBase(BaseModel):
@@ -28,8 +30,14 @@ class NewsletterBase(BaseModel):
     """Base schema for a newsletter."""
 
     name: str
+    slug: str | None = None
     move_to_folder: str | None = None
     extract_content: bool = False
+
+    @field_validator("slug")
+    def sanitize_slug_field(cls, v: str | None) -> str | None:
+        """Sanitize slug."""
+        return sanitize_slug(v)
 
 
 class NewsletterCreate(NewsletterBase):

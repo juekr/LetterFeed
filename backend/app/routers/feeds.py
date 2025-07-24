@@ -10,16 +10,18 @@ logger = get_logger(__name__)
 router = APIRouter()
 
 
-@router.get("/feeds/{newsletter_id}")
-def get_newsletter_feed(newsletter_id: str, db: Session = Depends(get_db)):
+@router.get("/feeds/{feed_identifier}")
+def get_newsletter_feed(feed_identifier: str, db: Session = Depends(get_db)):
     """Generate an Atom feed for a specific newsletter."""
-    logger.info(f"Generating feed for newsletter_id={newsletter_id}")
-    feed = generate_feed(db, newsletter_id)
+    logger.info(f"Generating feed for newsletter with identifier={feed_identifier}")
+    feed = generate_feed(db, feed_identifier)
     if not feed:
         logger.warning(
-            f"Newsletter with id={newsletter_id} not found, cannot generate feed."
+            f"Newsletter with identifier={feed_identifier} not found, cannot generate feed."
         )
         raise HTTPException(status_code=404, detail="Newsletter not found")
 
-    logger.info(f"Successfully generated feed for newsletter_id={newsletter_id}")
+    logger.info(
+        f"Successfully generated feed for newsletter with identifier={feed_identifier}"
+    )
     return Response(content=feed, media_type="application/atom+xml")

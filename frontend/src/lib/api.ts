@@ -9,6 +9,7 @@ export interface Sender {
 export interface Newsletter {
   id: string
   name: string
+  slug: string | null
   is_active: boolean
   move_to_folder?: string | null
   extract_content: boolean
@@ -18,6 +19,7 @@ export interface Newsletter {
 
 export interface NewsletterCreate {
     name: string;
+    slug?: string | null;
     sender_emails: string[];
     move_to_folder?: string | null;
     extract_content: boolean;
@@ -25,6 +27,7 @@ export interface NewsletterCreate {
 
 export interface NewsletterUpdate {
     name: string;
+    slug?: string | null;
     sender_emails: string[];
     move_to_folder?: string | null;
     extract_content: boolean;
@@ -198,6 +201,7 @@ export async function processEmails(): Promise<{ message: string }> {
     }, "Failed to process emails");
 }
 
-export function getFeedUrl(newsletterId: string): string {
-    return `${API_BASE_URL}/feeds/${newsletterId}`;
+export function getFeedUrl(newsletter: Newsletter): string {
+    const feedIdentifier = newsletter.slug || newsletter.id;
+    return `${API_BASE_URL}/feeds/${feedIdentifier}`;
 }

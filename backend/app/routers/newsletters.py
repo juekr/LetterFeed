@@ -9,7 +9,7 @@ from app.crud.entries import create_entry
 from app.crud.newsletters import (
     create_newsletter,
     delete_newsletter,
-    get_newsletter,
+    get_newsletter_by_identifier,
     get_newsletters,
     update_newsletter,
 )
@@ -26,7 +26,10 @@ def create_new_newsletter(newsletter: NewsletterCreate, db: Session = Depends(ge
     logger.info(
         f"Request to create new newsletter for senders {newsletter.sender_emails}"
     )
-    return create_newsletter(db=db, newsletter=newsletter)
+    db_newsletter = create_newsletter(db=db, newsletter=newsletter)
+    if db_newsletter is None:
+        raise HTTPException(status_code=409, detail="Slug already in use")
+    return db_newsletter
 
 
 @router.get("/newsletters", response_model=List[Newsletter])
@@ -41,7 +44,7 @@ def read_newsletters(skip: int = 0, limit: int = 100, db: Session = Depends(get_
 def read_newsletter(newsletter_id: str, db: Session = Depends(get_db)):
     """Retrieve a single newsletter by its ID."""
     logger.info(f"Request to read newsletter with id={newsletter_id}")
-    db_newsletter = get_newsletter(db, newsletter_id=newsletter_id)
+    db_newsletter = get_newsletter_by_identifier(db, identifier=newsletter_id)
     if db_newsletter is None:
         logger.warning(f"Newsletter with id={newsletter_id} not found")
         raise HTTPException(status_code=404, detail="Newsletter not found")
@@ -60,6 +63,8 @@ def update_existing_newsletter(
     if db_newsletter is None:
         logger.warning(f"Newsletter with id={newsletter_id} not found, cannot update")
         raise HTTPException(status_code=404, detail="Newsletter not found")
+    if db_newsletter == "conflict":
+        raise HTTPException(status_code=409, detail="Slug already in use")
     return db_newsletter
 
 
@@ -80,7 +85,7 @@ def create_newsletter_entry(
 ):
     """Create a new entry for a specific newsletter."""
     logger.info(f"Request to create entry for newsletter_id={newsletter_id}")
-    db_newsletter = get_newsletter(db, newsletter_id=newsletter_id)
+    db_newsletter = get_newsletter_by_identifier(db, identifier=newsletter_id)
     if db_newsletter is None:
         logger.warning(
             f"Newsletter with id={newsletter_id} not found, cannot create entry"

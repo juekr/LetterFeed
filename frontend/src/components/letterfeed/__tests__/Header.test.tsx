@@ -3,7 +3,6 @@ import { Header } from "../Header"
 import { Toaster } from "@/components/ui/sonner"
 import { toast } from "sonner"
 import * as api from "@/lib/api"
-import { AuthProvider } from "@/contexts/AuthContext"
 import { useAuth } from "@/hooks/useAuth"
 
 jest.mock("@/lib/api")
@@ -34,10 +33,6 @@ describe("Header", () => {
   const onOpenSettings = jest.fn()
   const logout = jest.fn()
   const consoleError = jest.spyOn(console, "error").mockImplementation(() => {})
-
-  const renderWithAuthProvider = (component: React.ReactElement) => {
-    return render(<AuthProvider>{component}</AuthProvider>)
-  }
 
   beforeEach(() => {
     jest.clearAllMocks()

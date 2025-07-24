@@ -7,16 +7,17 @@ import { Newsletter } from "@/lib/api"
 // Mock the getFeedUrl function
 jest.mock("@/lib/api", () => ({
   ...jest.requireActual("@/lib/api"), // import and retain all actual implementations
-  getFeedUrl: jest.fn((id) => `http://mock-api/feeds/${id}`),
+  getFeedUrl: jest.fn((newsletter: Newsletter) => `http://mock-api/feeds/${newsletter.slug || newsletter.id}`),
 }))
 
 const mockNewsletter: Newsletter = {
-  id: 1,
+  id: "1",
   name: "Tech Weekly",
+  slug: "tech-weekly",
   is_active: true,
   senders: [
-    { id: 1, email: "contact@techweekly.com", newsletter_id: 1 },
-    { id: 2, email: "updates@techweekly.com", newsletter_id: 1 },
+    { id: "1", email: "contact@techweekly.com" },
+    { id: "2", email: "updates@techweekly.com" },
   ],
   entries_count: 42,
 }
@@ -38,8 +39,8 @@ describe("NewsletterCard", () => {
 
     // Check for the RSS feed link
     const feedLink = screen.getByRole("link")
-    expect(feedLink).toHaveAttribute("href", "http://mock-api/feeds/1")
-    expect(feedLink).toHaveTextContent("http://mock-api/feeds/1")
+    expect(feedLink).toHaveAttribute("href", "http://mock-api/feeds/tech-weekly")
+    expect(feedLink).toHaveTextContent("http://mock-api/feeds/tech-weekly")
   })
 
   it('calls the onEdit function with the correct newsletter when the edit button is clicked', () => {

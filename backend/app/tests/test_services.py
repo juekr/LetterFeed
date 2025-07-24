@@ -1,4 +1,5 @@
 import uuid
+import xml.etree.ElementTree as ET
 
 from sqlalchemy.orm import Session
 
@@ -36,22 +37,36 @@ def test_generate_feed(db_session: Session):
     feed_xml = generate_feed(db_session, newsletter.id)
     assert feed_xml is not None
 
-    # Parse the feed XML to verify content (simplified check)
-    # In a real scenario, you'd use an XML parser to validate structure and content more thoroughly
-    assert f"<title>{newsletter.name}</title>" in feed_xml.decode()
-    assert f"<id>urn:letterfeed:newsletter:{newsletter.id}</id>" in feed_xml.decode()
-    assert '<link href="http://backend:8000/" rel="alternate"/>' in feed_xml.decode()
-    assert "<logo>http://backend:8000/logo.png</logo>" in feed_xml.decode()
-    assert "<icon>http://backend:8000/favicon.ico</icon>" in feed_xml.decode()
-    assert "<title>First Entry</title>" in feed_xml.decode()
-    assert "<title>Second Entry</title>" in feed_xml.decode()
+    # Parse the feed XML to verify content
+    root = ET.fromstring(feed_xml)
+    ns = {"atom": "http://www.w3.org/2005/Atom"}
+
+    # Check for top-level elements
+    assert root.find("atom:title", ns).text == newsletter.name
+    assert root.find("atom:id", ns).text == f"urn:letterfeed:newsletter:{newsletter.id}"
+    assert root.find("atom:logo", ns).text.endswith("/logo.png")
+    assert root.find("atom:icon", ns).text.endswith("/favicon.ico")
+
+    # Check for the alternate link
+    links = root.findall("atom:link", ns)
+    assert any(link.get("rel") == "alternate" and link.get("href") for link in links)
+
+    # Check for entries
+    entry_titles = [
+        entry.find("atom:title", ns).text for entry in root.findall("atom:entry", ns)
+    ]
+    assert "First Entry" in entry_titles
+    assert "Second Entry" in entry_titles
+
+    # Check content of one entry
+    first_entry_element = root.find(".//atom:title[.='First Entry']/..", ns)
     assert (
-        '<content type="html">&lt;p&gt;This is the first entry.&lt;/p&gt;</content>'
-        in feed_xml.decode()
+        first_entry_element.find("atom:content", ns).text
+        == "<p>This is the first entry.</p>"
     )
 
 
 def test_generate_feed_nonexistent_newsletter(db_session: Session):
     """Test feed generation for a non-existent newsletter."""
-    feed_xml = generate_feed(db_session, 999)  # Non-existent newsletter ID
+    feed_xml = generate_feed(db_session, "nonexistent-id")
     assert feed_xml is None

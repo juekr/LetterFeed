@@ -10,6 +10,7 @@ class Newsletter(Base):
     __tablename__ = "newsletters"
 
     id = Column(String, primary_key=True, index=True)
+    slug = Column(String, unique=True, index=True, nullable=True)
     name = Column(String)
     move_to_folder = Column(String, nullable=True)
     is_active = Column(Boolean, default=True)

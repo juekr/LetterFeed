@@ -4,18 +4,18 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.crud.entries import get_entries_by_newsletter
-from app.crud.newsletters import get_newsletter
+from app.crud.newsletters import get_newsletter_by_identifier
 
 
-def generate_feed(db: Session, newsletter_id: str):
+def generate_feed(db: Session, feed_identifier: str):
     """Generate an Atom feed for a given newsletter."""
-    newsletter = get_newsletter(db, newsletter_id)
+    newsletter = get_newsletter_by_identifier(db, feed_identifier)
     if not newsletter:
         return None
 
-    entries = get_entries_by_newsletter(db, newsletter_id)
+    entries = get_entries_by_newsletter(db, newsletter.id)
 
-    feed_url = f"{settings.app_base_url}/feeds/{newsletter_id}"
+    feed_url = f"{settings.app_base_url}/feeds/{newsletter.slug or newsletter.id}"
     logo_url = f"{settings.app_base_url}/logo.png"
     icon_url = f"{settings.app_base_url}/favicon.ico"
 

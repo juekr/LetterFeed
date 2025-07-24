@@ -10,7 +10,7 @@ interface NewsletterCardProps {
 }
 
 export function NewsletterCard({ newsletter, onEdit }: NewsletterCardProps) {
-  const feedUrl = getFeedUrl(newsletter.id)
+  const feedUrl = getFeedUrl(newsletter)
 
   return (
     <Card className="hover:shadow-md transition-shadow flex flex-col">

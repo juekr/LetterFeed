@@ -4,7 +4,11 @@ from unittest.mock import patch
 from sqlalchemy.orm import Session
 
 from app.crud.entries import create_entry, get_entries_by_newsletter
-from app.crud.newsletters import create_newsletter, get_newsletter, get_newsletters
+from app.crud.newsletters import (
+    create_newsletter,
+    get_newsletter_by_identifier,
+    get_newsletters,
+)
 from app.crud.settings import create_or_update_settings, get_settings
 from app.schemas.entries import EntryCreate
 from app.schemas.newsletters import NewsletterCreate
@@ -141,21 +145,21 @@ def test_create_newsletter_with_move_to_folder(db_session: Session):
         extract_content=True,
     )
     newsletter = create_newsletter(db_session, newsletter_data)
-    retrieved_newsletter = get_newsletter(db_session, newsletter.id)
+    retrieved_newsletter = get_newsletter_by_identifier(db_session, newsletter.id)
 
     assert retrieved_newsletter.name == "Test Newsletter with Folder"
     assert retrieved_newsletter.move_to_folder == "Archive/Test"
     assert retrieved_newsletter.extract_content is True
 
 
-def test_get_newsletter(db_session: Session):
+def test_get_newsletter_by_identifier(db_session: Session):
     """Test getting a single newsletter."""
     unique_email = f"sender_{uuid.uuid4()}@test.com"
     newsletter_data = NewsletterCreate(
         name="Test Newsletter 2", sender_emails=[unique_email]
     )
     created_newsletter = create_newsletter(db_session, newsletter_data)
-    newsletter = get_newsletter(db_session, created_newsletter.id)
+    newsletter = get_newsletter_by_identifier(db_session, created_newsletter.id)
     assert newsletter.name == "Test Newsletter 2"
     assert len(newsletter.senders) == 1
     assert newsletter.senders[0].email == unique_email
@@ -271,6 +275,6 @@ def test_delete_newsletter(db_session: Session):
     assert deleted_newsletter.name == "Newsletter to Delete"
 
     # Verify it's actually deleted
-    from app.crud.newsletters import get_newsletter
+    from app.crud.newsletters import get_newsletter_by_identifier
 
-    assert get_newsletter(db_session, newsletter.id) is None
+    assert get_newsletter_by_identifier(db_session, newsletter.id) is None

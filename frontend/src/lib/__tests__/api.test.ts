@@ -13,6 +13,7 @@ import {
   NewsletterCreate,
   NewsletterUpdate,
   SettingsCreate,
+  Newsletter,
 } from "../api"
 import { toast } from "sonner"
 
@@ -259,10 +260,33 @@ describe("API Functions", () => {
   })
 
   describe("getFeedUrl", () => {
-    it("should return the correct feed URL", () => {
-      const newsletterId = "123"
-      const expectedUrl = `${API_BASE_URL}/feeds/${newsletterId}`
-      const url = getFeedUrl(newsletterId)
+    it("should return the correct feed URL using slug if available", () => {
+      const newsletter: Newsletter = {
+        id: "123",
+        slug: "my-newsletter",
+        name: "Test",
+        is_active: true,
+        senders: [],
+        entries_count: 0,
+        extract_content: false,
+      }
+      const expectedUrl = `${API_BASE_URL}/feeds/my-newsletter`
+      const url = getFeedUrl(newsletter)
+      expect(url).toBe(expectedUrl)
+    })
+
+    it("should return the correct feed URL using id if slug is not available", () => {
+      const newsletter: Newsletter = {
+        id: "123",
+        slug: null,
+        name: "Test",
+        is_active: true,
+        senders: [],
+        entries_count: 0,
+        extract_content: false,
+      }
+      const expectedUrl = `${API_BASE_URL}/feeds/123`
+      const url = getFeedUrl(newsletter)
       expect(url).toBe(expectedUrl)
     })
   })

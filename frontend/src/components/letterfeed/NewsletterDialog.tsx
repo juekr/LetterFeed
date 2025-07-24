@@ -33,6 +33,7 @@ const getInitialState = (newsletter: Newsletter | null | undefined) => {
   if (newsletter) {
     return {
       name: newsletter.name,
+      slug: newsletter.slug || "",
       emails: newsletter.senders.map((s) => s.email),
       move_to_folder: newsletter.move_to_folder || "",
       extract_content: newsletter.extract_content,
@@ -40,6 +41,7 @@ const getInitialState = (newsletter: Newsletter | null | undefined) => {
   }
   return {
     name: "",
+    slug: "",
     emails: [""],
     move_to_folder: "",
     extract_content: false,
@@ -84,6 +86,7 @@ export function NewsletterDialog({ newsletter, isOpen, folderOptions, onOpenChan
 
     const payload = {
       name: formData.name,
+      slug: formData.slug,
       sender_emails: formData.emails.filter((email) => email.trim()),
       move_to_folder: formData.move_to_folder,
       extract_content: formData.extract_content,
@@ -131,6 +134,16 @@ export function NewsletterDialog({ newsletter, isOpen, folderOptions, onOpenChan
               value={formData.name}
               onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
               placeholder="Enter newsletter name"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="slug">Custom URL</Label>
+            <Input
+              id="slug"
+              value={formData.slug}
+              onChange={(e) => setFormData((prev) => ({ ...prev, slug: e.target.value }))}
+              placeholder="my-custom-url"
             />
           </div>
 
