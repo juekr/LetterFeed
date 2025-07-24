@@ -1,6 +1,6 @@
 from typing import List
 
-from pydantic import BaseModel, ConfigDict, field_validator
+from pydantic import BaseModel, ConfigDict, EmailStr, field_validator
 
 from app.core.slug import sanitize_slug
 
@@ -8,7 +8,7 @@ from app.core.slug import sanitize_slug
 class SenderBase(BaseModel):
     """Base schema for a sender."""
 
-    email: str
+    email: EmailStr
 
 
 class SenderCreate(SenderBase):
@@ -43,13 +43,13 @@ class NewsletterBase(BaseModel):
 class NewsletterCreate(NewsletterBase):
     """Schema for creating a new newsletter."""
 
-    sender_emails: List[str]
+    sender_emails: List[EmailStr]
 
 
 class NewsletterUpdate(NewsletterBase):
     """Schema for updating an existing newsletter."""
 
-    sender_emails: List[str]
+    sender_emails: List[EmailStr]
 
 
 class Newsletter(NewsletterBase):

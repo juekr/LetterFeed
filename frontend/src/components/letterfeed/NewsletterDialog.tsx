@@ -20,6 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { isValidEmail } from "@/lib/utils"
 
 interface NewsletterDialogProps {
   newsletter?: Newsletter | null
@@ -80,7 +81,7 @@ export function NewsletterDialog({ newsletter, isOpen, folderOptions, onOpenChan
   }
 
   const handleSubmit = async () => {
-    if (!formData.name || !formData.emails.some((email) => email.trim())) {
+    if (!formData.name || !formData.emails.some((email) => email.trim() && isValidEmail(email))) {
       return
     }
 
@@ -178,6 +179,7 @@ export function NewsletterDialog({ newsletter, isOpen, folderOptions, onOpenChan
                   onChange={(e) => handleEmailChange(index, e.target.value)}
                   placeholder="Enter email address"
                   type="email"
+                  aria-invalid={email.length > 0 && !isValidEmail(email)}
                 />
                 {formData.emails.length > 1 && (
                   <Button variant="outline" size="sm" onClick={() => handleRemoveEmail(index)}>
