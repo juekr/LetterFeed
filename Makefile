@@ -49,9 +49,9 @@ install-frontend:
 dev: ## Start development servers
 	@echo ">>> Starting development servers..."
 	@echo ">>> Starting backend server..."
-	@cd backend && uv run uvicorn app.main:app --reload &
+	@bash -c 'set -a; source .env; set +a; cd backend && uv run uvicorn app.main:app --reload' &
 	@echo ">>> Starting frontend server..."
-	@cd frontend && npm run dev
+	@bash -c 'set -a; source .env; set +a; cd frontend && npm run dev'
 
 .PHONY: test
 test: test-backend test-frontend ## Run all tests
