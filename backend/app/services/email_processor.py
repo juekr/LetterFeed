@@ -38,7 +38,13 @@ def _connect_to_imap(settings: Settings) -> imaplib.IMAP4_SSL | None:
         logger.info(f"Connecting to IMAP server: {settings.imap_server}")
         mail = imaplib.IMAP4_SSL(settings.imap_server)
         mail.login(settings.imap_username, settings.imap_password)
-        mail.select(settings.search_folder)
+        status, messages = mail.select(settings.search_folder)
+        if status != "OK":
+            logger.error(
+                f"Failed to select mailbox: {settings.search_folder}, status: {status}, messages: {messages}"
+            )
+            mail.logout()
+            return None
         logger.info(f"Selected mailbox: {settings.search_folder}")
         return mail
     except Exception as e:

@@ -65,8 +65,8 @@ def test_process_emails(mock_imap, db_session: Session):
     # Mock IMAP connection and email fetching
     mock_mail = MagicMock()
     mock_imap.return_value = mock_mail
-    mock_mail.login.return_value = (None, None)
-    mock_mail.select.return_value = (None, None)
+    mock_mail.login.return_value = ("OK", [b"Login successful"])
+    mock_mail.select.return_value = ("OK", [b"1"])
     mock_mail.search.return_value = ("OK", [b"1"])
 
     # Mock email content
@@ -150,6 +150,8 @@ def test_process_emails_auto_add_sender(mock_imap, db_session: Session):
 
     mock_mail = MagicMock()
     mock_imap.return_value = mock_mail
+    mock_mail.login.return_value = ("OK", [b"Login successful"])
+    mock_mail.select.return_value = ("OK", [b"1"])
     mock_mail.search.return_value = ("OK", [b"1"])
     mock_msg_bytes = b"From: New Sender <new@example.com>\nSubject: New Email\nMessage-ID: <new@new.com>\n\nHello"
     mock_mail.fetch.return_value = ("OK", [(None, mock_msg_bytes)])
@@ -195,6 +197,8 @@ def test_process_emails_no_move_or_read(mock_imap, db_session: Session):
 
     mock_mail = MagicMock()
     mock_imap.return_value = mock_mail
+    mock_mail.login.return_value = ("OK", [b"Login successful"])
+    mock_mail.select.return_value = ("OK", [b"1"])
     mock_mail.search.return_value = ("OK", [b"1"])
     mock_msg_bytes = b"From: newsletter@example.com\nSubject: Test Subject\nMessage-ID: <test@test.com>\n\nTest Body"
     mock_mail.fetch.return_value = ("OK", [(None, mock_msg_bytes)])
@@ -235,6 +239,8 @@ def test_process_emails_avoids_duplicates(mock_imap, db_session: Session):
 
     mock_mail = MagicMock()
     mock_imap.return_value = mock_mail
+    mock_mail.login.return_value = ("OK", [b"Login successful"])
+    mock_mail.select.return_value = ("OK", [b"1"])
     mock_mail.search.return_value = ("OK", [b"1"])
     # This email has the same Message-ID as the one we just created
     mock_msg_bytes = b"From: newsletter@example.com\nSubject: Test Subject\nMessage-ID: <existing@message.com>\n\nTest Body"
