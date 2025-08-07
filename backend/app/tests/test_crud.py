@@ -278,3 +278,27 @@ def test_delete_newsletter(db_session: Session):
     from app.crud.newsletters import get_newsletter_by_identifier
 
     assert get_newsletter_by_identifier(db_session, newsletter.id) is None
+
+
+def test_create_multiple_entries_have_different_timestamps(db_session: Session):
+    """Test that multiple entries for the same newsletter have different timestamps."""
+    import time
+
+    newsletter_data = NewsletterCreate(
+        name="Timestamp Test Newsletter",
+        sender_emails=[f"sender_{uuid.uuid4()}@test.com"],
+    )
+    newsletter = create_newsletter(db_session, newsletter_data)
+    entry_data_1 = EntryCreate(
+        subject="Entry 1", body="Body 1", message_id=f"<{uuid.uuid4()}@test.com>"
+    )
+    entry1 = create_entry(db_session, entry_data_1, newsletter.id)
+
+    time.sleep(1)  # sleep for a short time to ensure timestamps are different
+
+    entry_data_2 = EntryCreate(
+        subject="Entry 2", body="Body 2", message_id=f"<{uuid.uuid4()}@test.com>"
+    )
+    entry2 = create_entry(db_session, entry_data_2, newsletter.id)
+
+    assert entry1.received_at != entry2.received_at
