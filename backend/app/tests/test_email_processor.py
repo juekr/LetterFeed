@@ -120,3 +120,38 @@ def test_process_single_email_with_content_extraction(
     assert entry_create_arg.body == "Extracted Body"
     # Subject should still come from the email, not the extracted title
     assert entry_create_arg.subject == "Test Email"
+
+
+def test_process_single_email_with_encoded_from_header(db_session: Session):
+    """Test that an encoded From header is correctly decoded for the newsletter name."""
+    # 1. ARRANGE
+    settings_data = SettingsCreate(
+        imap_server="test.com",
+        imap_username="test",
+        imap_password="password",
+        auto_add_new_senders=True,
+    )
+    settings = create_or_update_settings(db_session, settings_data)
+
+    mock_mail = MagicMock(spec=imaplib.IMAP4_SSL)
+    msg = Message()
+    # "Кирилл" in Cyrillic, base64 encoded for UTF-8
+    from_header = "=?utf-8?B?0JrQuNGA0LjQu9C7?= <test@example.com>"
+    msg["From"] = from_header
+    msg["Subject"] = "Test Email"
+    msg["Message-ID"] = "<test-message-id-encoded-from>"
+    msg.set_payload("<html><body><p>Body</p></body></html>", "utf-8")
+    mock_mail.fetch.return_value = ("OK", [(b"1 (RFC822)", msg.as_bytes())])
+
+    sender_map = {}  # empty, to trigger auto-add
+
+    # 2. ACT
+    _process_single_email("1", mock_mail, db_session, sender_map, settings)
+
+    # 3. ASSERT
+    from app.crud.newsletters import get_newsletters
+
+    newsletters = get_newsletters(db_session)
+    assert len(newsletters) == 1
+    assert newsletters[0].name == "Кирилл"
+    assert newsletters[0].senders[0].email == "test@example.com"

@@ -148,7 +148,9 @@ def _auto_add_newsletter(
 ) -> Newsletter:
     """Automatically add a new newsletter."""
     logger.info(f"Auto-adding new newsletter for sender: {sender}")
-    newsletter_name = email.utils.parseaddr(msg["From"])[0] or sender
+    # Decode the 'From' header to handle non-ASCII characters in the sender's name
+    from_header = str(make_header(decode_header(msg.get("From", ""))))
+    newsletter_name = email.utils.parseaddr(from_header)[0] or sender
     new_newsletter_schema = NewsletterCreate(
         name=newsletter_name,
         sender_emails=[sender],
