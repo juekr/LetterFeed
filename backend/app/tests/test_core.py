@@ -70,7 +70,7 @@ def test_process_emails(mock_imap, db_session: Session):
     mock_mail.search.return_value = ("OK", [b"1"])
 
     # Mock email content
-    mock_msg_bytes = b"From: newsletter@example.com\nSubject: Test Subject\nMessage-ID: <test@test.com>\n\nTest Body"
+    mock_msg_bytes = b"From: newsletter@example.com\nSubject: Test Subject\nMessage-ID: <test@test.com>\n\n<p>Test Body</p>"
     mock_mail.fetch.return_value = ("OK", [(None, mock_msg_bytes)])
 
     process_emails(db_session)
@@ -95,7 +95,7 @@ def test_process_emails(mock_imap, db_session: Session):
     entries = get_entries_by_newsletter(db_session, newsletters[0].id)
     assert len(entries) == 1
     assert entries[0].subject == "Test Subject"
-    assert entries[0].body == "Test Body"
+    assert entries[0].body == "<p>Test Body</p>"
 
 
 @patch("app.core.scheduler.job")

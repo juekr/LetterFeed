@@ -26,6 +26,7 @@ def _setup_test_email_processing(
     msg["From"] = newsletter_create_data.sender_emails[0]
     msg["Subject"] = "Test Email"
     msg["Message-ID"] = "<test-message-id>"
+    msg.set_payload("<html><body><p>Original Body</p></body></html>", "utf-8")
     mock_mail.fetch.return_value = ("OK", [(b"1 (RFC822)", msg.as_bytes())])
 
     return mock_mail, newsletter, settings
@@ -83,13 +84,17 @@ def test_process_single_email_with_global_move_folder(db_session: Session):
     mock_mail.store.assert_any_call("1", "+FLAGS", "\\Deleted")
 
 
-@patch("app.services.email_processor.trafilatura.extract")
+@patch("app.services.email_processor._extract_and_clean_html")
 def test_process_single_email_with_content_extraction(
-    mock_trafilatura, db_session: Session
+    mock_extract_clean,
+    db_session: Session,
 ):
-    """Test that trafilatura is called when extract_content is True."""
+    """Test that the cleaning function is called when extract_content is True."""
     # 1. ARRANGE
-    mock_trafilatura.return_value = "Extracted Body"
+    mock_extract_clean.return_value = {
+        "title": "Extracted Title",
+        "body": "Extracted Body",
+    }
     settings_data = SettingsCreate(
         imap_server="test.com", imap_username="test", imap_password="password"
     )
@@ -108,8 +113,10 @@ def test_process_single_email_with_content_extraction(
         _process_single_email("1", mock_mail, db_session, sender_map, settings)
 
     # 3. ASSERT
-    mock_trafilatura.assert_called_once()
+    mock_extract_clean.assert_called_once()
     # Check that create_entry was called with the extracted body
     mock_create_entry.assert_called_once()
     entry_create_arg = mock_create_entry.call_args[0][1]
     assert entry_create_arg.body == "Extracted Body"
+    # Subject should still come from the email, not the extracted title
+    assert entry_create_arg.subject == "Test Email"

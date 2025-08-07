@@ -1,10 +1,12 @@
 import email
-import html
 import imaplib
+import quopri
 from email.header import decode_header, make_header
 from email.message import Message
 
-import trafilatura
+import nh3
+from bs4 import BeautifulSoup
+from readability import Document
 from sqlalchemy.orm import Session
 
 from app.core.logging import get_logger
@@ -62,31 +64,94 @@ def _fetch_unread_email_ids(mail: imaplib.IMAP4_SSL) -> list[str]:
 
 
 def _get_email_body(msg: Message) -> str:
-    """Extract body from an email message."""
-    body = ""
+    """Extract the HTML body from an email message, falling back to plain text."""
+    html_body = ""
+    text_body = ""
     for part in msg.walk():
         ctype = part.get_content_type()
         cdispo = str(part.get("Content-Disposition"))
         if "attachment" in cdispo:
             continue
-        if ctype in ["text/plain", "text/html"]:
+
+        if ctype == "text/html":
             try:
                 payload = part.get_payload(decode=True)
                 charset = part.get_content_charset() or "utf-8"
-                body = payload.decode(charset, "ignore")
+                html_body = payload.decode(charset, "ignore")
             except Exception:
                 pass
-    return html.unescape(body)
+        elif ctype == "text/plain":
+            try:
+                payload = part.get_payload(decode=True)
+                charset = part.get_content_charset() or "utf-8"
+                text_body = payload.decode(charset, "ignore")
+            except Exception:
+                pass
+
+    # Prefer HTML body, but fall back to plain text if HTML is empty
+    return html_body or text_body
+
+
+def _extract_and_clean_html(raw_html_content: str) -> dict[str, str]:
+    """Decode, extract, and sanitize newsletter HTML."""
+    try:
+        decoded_bytes = quopri.decodestring(raw_html_content.encode("utf-8"))
+        clean_html_str = decoded_bytes.decode("utf-8", "ignore")
+    except Exception:
+        # If quopri fails, assume it's already decoded.
+        clean_html_str = raw_html_content
+
+    doc = Document(clean_html_str)
+    extracted_body = doc.summary(html_partial=True)
+
+    ALLOWED_TAGS = {
+        "p",
+        "strong",
+        "em",
+        "u",
+        "h3",
+        "h4",
+        "ul",
+        "ol",
+        "li",
+        "a",
+        "img",
+        "br",
+        "div",
+        "span",
+        "figure",
+        "figcaption",
+    }
+    ALLOWED_ATTRIBUTES = {
+        "a": {"href", "title"},
+        "img": {"src", "alt", "width", "height"},
+        "*": {"style"},
+    }
+    cleaned_body = nh3.clean(
+        extracted_body, tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRIBUTES
+    )
+
+    title = doc.title()
+    if not title or title == "no-title":
+        soup = BeautifulSoup(cleaned_body, "html.parser")
+        first_headline = soup.find(["h1", "h2", "h3"])
+        title = first_headline.get_text(strip=True) if first_headline else "Newsletter"
+
+    return {"title": title, "body": cleaned_body}
 
 
 def _auto_add_newsletter(
-    db: Session, sender: str, msg: Message, settings: Settings
+    db: Session,
+    sender: str,
+    msg: Message,
+    settings: Settings,
 ) -> Newsletter:
     """Automatically add a new newsletter."""
     logger.info(f"Auto-adding new newsletter for sender: {sender}")
     newsletter_name = email.utils.parseaddr(msg["From"])[0] or sender
     new_newsletter_schema = NewsletterCreate(
-        name=newsletter_name, sender_emails=[sender]
+        name=newsletter_name,
+        sender_emails=[sender],
     )
     return create_newsletter(db, new_newsletter_schema)
 
@@ -129,14 +194,15 @@ def _process_single_email(
         return
 
     subject = str(make_header(decode_header(msg["Subject"])))
-    final_body = _get_email_body(msg)
+    body = _get_email_body(msg)
 
     if newsletter.extract_content:
-        extracted_body = trafilatura.extract(final_body)
-        if extracted_body:
-            final_body = extracted_body
+        cleaned_data = _extract_and_clean_html(body)
+        # The subject from the email itself is often better than what readability extracts
+        # so we only override the body.
+        body = cleaned_data["body"]
 
-    entry_schema = EntryCreate(subject=subject, body=final_body, message_id=message_id)
+    entry_schema = EntryCreate(subject=subject, body=body, message_id=message_id)
     new_entry = create_entry(db, entry_schema, newsletter.id)
 
     if not new_entry:
