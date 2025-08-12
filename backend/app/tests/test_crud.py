@@ -152,6 +152,33 @@ def test_create_newsletter_with_move_to_folder(db_session: Session):
     assert retrieved_newsletter.extract_content is True
 
 
+def test_create_newsletter_with_search_folder(db_session: Session):
+    """Test creating and updating a newsletter with the search_folder attribute."""
+    unique_email = f"sender_{uuid.uuid4()}@test.com"
+    newsletter_data = NewsletterCreate(
+        name="Test Newsletter with Search Folder",
+        sender_emails=[unique_email],
+        search_folder="CustomInbox",
+    )
+    newsletter = create_newsletter(db_session, newsletter_data)
+    retrieved_newsletter = get_newsletter_by_identifier(db_session, newsletter.id)
+
+    assert retrieved_newsletter.name == "Test Newsletter with Search Folder"
+    assert retrieved_newsletter.search_folder == "CustomInbox"
+
+    # Test updating the search_folder
+    from app.crud.newsletters import update_newsletter
+    from app.schemas.newsletters import NewsletterUpdate
+
+    update_data = NewsletterUpdate(
+        name=newsletter.name,
+        sender_emails=[unique_email],
+        search_folder="UpdatedCustomInbox",
+    )
+    updated_newsletter = update_newsletter(db_session, newsletter.id, update_data)
+    assert updated_newsletter.search_folder == "UpdatedCustomInbox"
+
+
 def test_get_newsletter_by_identifier(db_session: Session):
     """Test getting a single newsletter."""
     unique_email = f"sender_{uuid.uuid4()}@test.com"

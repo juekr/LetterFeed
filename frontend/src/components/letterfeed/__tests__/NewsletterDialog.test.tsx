@@ -23,6 +23,7 @@ const mockNewsletter: Newsletter = {
   extract_content: false,
   senders: [{ id: "1", email: "current@example.com" }],
   entries_count: 5,
+  search_folder: "",
   move_to_folder: "",
 }
 
@@ -62,6 +63,7 @@ describe("NewsletterDialog", () => {
           name: "My New Newsletter",
           slug: "my-new-newsletter",
           sender_emails: ["test@example.com"],
+          search_folder: "",
           move_to_folder: "",
           extract_content: false,
         })
@@ -109,6 +111,7 @@ describe("NewsletterDialog", () => {
           name: "Updated Name",
           slug: "existing-newsletter",
           sender_emails: ["current@example.com"],
+          search_folder: "",
           move_to_folder: "",
           extract_content: false,
         })

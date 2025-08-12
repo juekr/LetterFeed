@@ -8,15 +8,15 @@ from app.crud.newsletters import create_newsletter
 from app.crud.settings import create_or_update_settings
 from app.models.newsletters import Newsletter
 from app.schemas.newsletters import NewsletterCreate
-from app.schemas.settings import SettingsCreate
-from app.services.email_processor import _process_single_email
+from app.schemas.settings import Settings, SettingsCreate
+from app.services.email_processor import _process_single_email, process_emails
 
 
 def _setup_test_email_processing(
     db_session: Session,
     newsletter_create_data: NewsletterCreate,
     settings_create_data: SettingsCreate,
-) -> tuple[MagicMock, Newsletter, SettingsCreate]:
+) -> tuple[MagicMock, Newsletter, Settings]:
     """Help to set up mocks and data for email processing tests."""
     settings = create_or_update_settings(db_session, settings_create_data)
     newsletter = create_newsletter(db_session, newsletter_create_data)
@@ -82,6 +82,74 @@ def test_process_single_email_with_global_move_folder(db_session: Session):
     # 3. ASSERT
     mock_mail.copy.assert_called_once_with("1", "GlobalArchive")
     mock_mail.store.assert_any_call("1", "+FLAGS", "\\Deleted")
+
+
+@patch("app.services.email_processor._connect_to_imap")
+def test_process_emails_uses_newsletter_search_folder(
+    mock_connect_to_imap,
+    db_session: Session,
+):
+    """Test that the per-newsletter search_folder is used, overriding the global setting."""
+    # 1. ARRANGE
+    settings_data = SettingsCreate(
+        imap_server="test.com",
+        imap_username="test",
+        imap_password="password",
+        search_folder="GlobalInbox",
+    )
+    create_or_update_settings(db_session, settings_data)
+
+    newsletter_data = NewsletterCreate(
+        name="Test Newsletter",
+        sender_emails=["test@example.com"],
+        search_folder="NewsletterInbox",
+    )
+    create_newsletter(db_session, newsletter_data)
+
+    # Mock the return of _connect_to_imap to avoid a real IMAP connection
+    mock_connect_to_imap.return_value = None
+
+    # 2. ACT
+    process_emails(db_session)
+
+    # 3. ASSERT
+    # Check that _connect_to_imap was called with the newsletter's specific folder
+    mock_connect_to_imap.assert_called_once()
+    call_args = mock_connect_to_imap.call_args[0]
+    assert call_args[1] == "NewsletterInbox"
+
+
+@patch("app.services.email_processor._connect_to_imap")
+def test_process_emails_uses_global_search_folder(
+    mock_connect_to_imap,
+    db_session: Session,
+):
+    """Test that the global search_folder is used when the per-newsletter one is not set."""
+    # 1. ARRANGE
+    settings_data = SettingsCreate(
+        imap_server="test.com",
+        imap_username="test",
+        imap_password="password",
+        search_folder="GlobalInbox",
+    )
+    create_or_update_settings(db_session, settings_data)
+
+    newsletter_data = NewsletterCreate(
+        name="Test Newsletter",
+        sender_emails=["test@example.com"],
+        search_folder=None,  # Explicitly not set
+    )
+    create_newsletter(db_session, newsletter_data)
+
+    mock_connect_to_imap.return_value = None
+
+    # 2. ACT
+    process_emails(db_session)
+
+    # 3. ASSERT
+    mock_connect_to_imap.assert_called_once()
+    call_args = mock_connect_to_imap.call_args[0]
+    assert call_args[1] == "GlobalInbox"
 
 
 @patch("app.services.email_processor._extract_and_clean_html")
