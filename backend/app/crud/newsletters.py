@@ -64,6 +64,7 @@ def create_newsletter(db: Session, newsletter: NewsletterCreate):
         id=generate(size=10),
         name=newsletter.name,
         slug=newsletter.slug,
+        search_folder=newsletter.search_folder,
         extract_content=newsletter.extract_content,
         move_to_folder=newsletter.move_to_folder,
     )

@@ -34,20 +34,22 @@ def _is_configured(settings: Settings | None) -> bool:
     return True
 
 
-def _connect_to_imap(settings: Settings) -> imaplib.IMAP4_SSL | None:
+def _connect_to_imap(
+    settings: Settings, search_folder: str
+) -> imaplib.IMAP4_SSL | None:
     """Connect to the IMAP server and select the mailbox."""
     try:
         logger.info(f"Connecting to IMAP server: {settings.imap_server}")
         mail = imaplib.IMAP4_SSL(settings.imap_server)
         mail.login(settings.imap_username, settings.imap_password)
-        status, messages = mail.select(settings.search_folder)
+        status, messages = mail.select(search_folder)
         if status != "OK":
             logger.error(
-                f"Failed to select mailbox: {settings.search_folder}, status: {status}, messages: {messages}"
+                f"Failed to select mailbox: {search_folder}, status: {status}, messages: {messages}"
             )
             mail.logout()
             return None
-        logger.info(f"Selected mailbox: {settings.search_folder}")
+        logger.info(f"Selected mailbox: {search_folder}")
         return mail
     except Exception as e:
         logger.error(f"Failed to connect to IMAP server: {e}", exc_info=True)
@@ -235,26 +237,61 @@ def process_emails(db: Session) -> None:
     if not _is_configured(settings):
         return
 
-    newsletters = get_newsletters(db)
-    sender_map = {sender.email: nl for nl in newsletters for sender in nl.senders}
-    logger.info(f"Processing emails for {len(newsletters)} newsletters.")
+    all_newsletters = get_newsletters(db)
+    logger.info(f"Processing emails for {len(all_newsletters)} newsletters.")
 
-    mail = _connect_to_imap(settings)
-    if not mail:
-        return
+    # Group newsletters by search folder
+    folder_groups: dict[str, list[Newsletter]] = {}
+    for nl in all_newsletters:
+        folder = nl.search_folder or settings.search_folder
+        if folder not in folder_groups:
+            folder_groups[folder] = []
+        folder_groups[folder].append(nl)
 
-    try:
-        email_ids = _fetch_unread_email_ids(mail)
-        logger.info(f"Found {len(email_ids)} unseen emails.")
-        for num in email_ids:
-            _process_single_email(num, mail, db, sender_map, settings)
+    # If auto-adding is enabled, ensure the default search folder is always checked.
+    if settings.auto_add_new_senders and settings.search_folder not in folder_groups:
+        folder_groups[settings.search_folder] = []
 
-        if settings.move_to_folder:
-            logger.info("Expunging deleted emails")
-            mail.expunge()
+    for search_folder, newsletters_in_folder in folder_groups.items():
+        logger.info(
+            f"Processing folder '{search_folder}' for {len(newsletters_in_folder)} newsletters."
+        )
+        sender_map = {
+            sender.email: nl for nl in newsletters_in_folder for sender in nl.senders
+        }
 
-    except Exception as e:
-        logger.error(f"Error processing emails: {e}", exc_info=True)
-    finally:
-        mail.logout()
-        logger.info("Email processing finished successfully.")
+        mail = _connect_to_imap(settings, search_folder)
+        if not mail:
+            logger.warning(
+                f"Skipping folder '{search_folder}' due to connection issue."
+            )
+            continue
+
+        try:
+            email_ids = _fetch_unread_email_ids(mail)
+            logger.info(
+                f"Found {len(email_ids)} unseen emails in folder '{search_folder}'."
+            )
+            for num in email_ids:
+                _process_single_email(num, mail, db, sender_map, settings)
+
+            # Expunge logic needs to be carefully considered.
+            # If any newsletter in this folder group has a move_to_folder, we expunge.
+            # This is an approximation. A more robust solution might require per-email expunge.
+            should_expunge = any(
+                nl.move_to_folder or settings.move_to_folder
+                for nl in newsletters_in_folder
+            )
+            if should_expunge:
+                logger.info(f"Expunging deleted emails from '{search_folder}'")
+                mail.expunge()
+
+        except Exception as e:
+            logger.error(
+                f"Error processing emails in folder '{search_folder}': {e}",
+                exc_info=True,
+            )
+        finally:
+            mail.logout()
+
+    logger.info("Email processing finished successfully.")

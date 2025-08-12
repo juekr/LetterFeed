@@ -36,6 +36,7 @@ const getInitialState = (newsletter: Newsletter | null | undefined) => {
       name: newsletter.name,
       slug: newsletter.slug || "",
       emails: newsletter.senders.map((s) => s.email),
+      search_folder: newsletter.search_folder || "",
       move_to_folder: newsletter.move_to_folder || "",
       extract_content: newsletter.extract_content,
     }
@@ -44,6 +45,7 @@ const getInitialState = (newsletter: Newsletter | null | undefined) => {
     name: "",
     slug: "",
     emails: [""],
+    search_folder: "",
     move_to_folder: "",
     extract_content: false,
   }
@@ -89,6 +91,7 @@ export function NewsletterDialog({ newsletter, isOpen, folderOptions, onOpenChan
       name: formData.name,
       slug: formData.slug,
       sender_emails: formData.emails.filter((email) => email.trim()),
+      search_folder: formData.search_folder,
       move_to_folder: formData.move_to_folder,
       extract_content: formData.extract_content,
     }
@@ -146,6 +149,28 @@ export function NewsletterDialog({ newsletter, isOpen, folderOptions, onOpenChan
               onChange={(e) => setFormData((prev) => ({ ...prev, slug: e.target.value }))}
               placeholder="my-custom-url"
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="search_folder">Folder to Search</Label>
+            <Select
+              value={formData.search_folder || "None"}
+              onValueChange={(value) =>
+                setFormData((prev) => ({ ...prev, search_folder: value === "None" ? "" : value }))
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select folder or leave empty" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="None">Default (use global setting)</SelectItem>
+                {folderOptions.map((folder) => (
+                  <SelectItem key={folder} value={folder}>
+                    {folder}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">

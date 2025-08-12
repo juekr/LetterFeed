@@ -12,6 +12,7 @@ class Newsletter(Base):
     id = Column(String, primary_key=True, index=True)
     slug = Column(String, unique=True, index=True, nullable=True)
     name = Column(String)
+    search_folder = Column(String, nullable=True)
     move_to_folder = Column(String, nullable=True)
     is_active = Column(Boolean, default=True)
     extract_content = Column(Boolean, default=False)

@@ -11,6 +11,7 @@ export interface Newsletter {
   name: string
   slug: string | null
   is_active: boolean
+  search_folder?: string | null
   move_to_folder?: string | null
   extract_content: boolean
   senders: { id: string; email: string }[]
@@ -21,6 +22,7 @@ export interface NewsletterCreate {
     name: string;
     slug?: string | null;
     sender_emails: string[];
+    search_folder?: string | null;
     move_to_folder?: string | null;
     extract_content: boolean;
 }
@@ -29,6 +31,7 @@ export interface NewsletterUpdate {
     name: string;
     slug?: string | null;
     sender_emails: string[];
+    search_folder?: string | null;
     move_to_folder?: string | null;
     extract_content: boolean;
 }

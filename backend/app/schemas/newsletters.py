@@ -31,6 +31,7 @@ class NewsletterBase(BaseModel):
 
     name: str
     slug: str | None = None
+    search_folder: str | None = None
     move_to_folder: str | None = None
     extract_content: bool = False
 
