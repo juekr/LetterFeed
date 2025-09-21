@@ -80,6 +80,9 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ghcr.io/leonmuscoden/letterfeed-backend
+          tags: |
+            type=ref,event=tag
+            type=raw,value=latest,enable={{is_default_branch}}
 
       - name: Build and push a Docker image for backend
         uses: docker/build-push-action@v5
@@ -117,6 +120,9 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ghcr.io/leonmuscoden/letterfeed-frontend
+          tags: |
+            type=ref,event=tag
+            type=raw,value=latest,enable={{is_default_branch}}
 
       - name: Build and push a Docker image for frontend
         uses: docker/build-push-action@v5
