@@ -113,6 +113,9 @@ def create_or_update_settings(db: Session, settings: SettingsCreate):
                 db_settings.auth_password_hash = get_password_hash(value)
             else:
                 db_settings.auth_password_hash = None
+        elif key == "imap_password":
+            if value:  # Only update password if a new one is provided
+                setattr(db_settings, key, value)
         elif hasattr(db_settings, key):
             setattr(db_settings, key, value)
 

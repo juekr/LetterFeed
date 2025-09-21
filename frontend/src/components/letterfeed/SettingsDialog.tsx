@@ -68,7 +68,11 @@ export function SettingsDialog({
   const handleSave = async () => {
     if (!currentSettings) return
     try {
-      await updateSettings(currentSettings)
+      const payload: SettingsCreate = { ...currentSettings }
+      if (payload.imap_password === "") {
+        delete payload.imap_password
+      }
+      await updateSettings(payload)
       toast.success("Settings saved successfully!")
       onOpenChange(false)
       onSuccess()
@@ -140,7 +144,7 @@ export function SettingsDialog({
               <Input
                 id="imap-password"
                 type="password"
-                value={currentSettings.imap_password}
+                value={currentSettings.imap_password ?? ""}
                 onChange={(e) =>
                   handleSettingsChange("imap_password", e.target.value)
                 }

@@ -51,7 +51,7 @@ export interface Settings {
 export interface SettingsCreate {
     imap_server: string;
     imap_username: string;
-    imap_password?: string;
+    imap_password?: string | null;
     search_folder: string;
     move_to_folder?: string | null;
     mark_as_read: boolean;

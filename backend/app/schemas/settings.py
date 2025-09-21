@@ -19,7 +19,7 @@ class SettingsBase(BaseModel):
 class SettingsCreate(SettingsBase):
     """Schema for creating or updating settings, including the IMAP password."""
 
-    imap_password: str
+    imap_password: str | None = None
     auth_password: str | None = None
 
 
