@@ -18,17 +18,15 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Set up Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       with:
-        python-version: '3.12'
+        python-version: '3.13'
     - name: Install uv
       run: curl -LsSf https://astral.sh/uv/install.sh | sh
-    - name: Install system dependencies
-      run: sudo apt-get update && sudo apt-get install -y libxml2-dev libxslt-dev
     - name: Install dependencies
       run: |
         source ~/.cargo/env
-        uv sync --group test
+        uv sync --python 3.13 --group test
     - name: Lint with ruff
       run: |
         uv run ruff check .
@@ -44,7 +42,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Set up Node.js
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v5
       with:
         node-version: 20
         cache: 'npm'
