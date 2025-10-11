@@ -8,33 +8,31 @@ from app.schemas.entries import EntryCreate
 logger = get_logger(__name__)
 
 
-def get_all_entries(db: Session, skip: int = 0, limit: int = 100):
+def get_all_entries(db: Session, skip: int = 0, limit: int | None = None):
     """Retrieve all entries from all newsletters, sorted by received date."""
     logger.debug(f"Querying all entries with skip={skip}, limit={limit}")
-    return (
+    query = (
         db.query(Entry)
         .options(joinedload(Entry.newsletter))
         .order_by(Entry.received_at.desc())
         .offset(skip)
-        .limit(limit)
-        .all()
     )
+    if limit is not None:
+        query = query.limit(limit)
+    return query.all()
 
 
 def get_entries_by_newsletter(
-    db: Session, newsletter_id: str, skip: int = 0, limit: int = 100
+    db: Session, newsletter_id: str, skip: int = 0, limit: int | None = None
 ):
     """Retrieve entries for a specific newsletter."""
     logger.debug(
         f"Querying entries for newsletter_id={newsletter_id}, skip={skip}, limit={limit}"
     )
-    return (
-        db.query(Entry)
-        .filter(Entry.newsletter_id == newsletter_id)
-        .offset(skip)
-        .limit(limit)
-        .all()
-    )
+    query = db.query(Entry).filter(Entry.newsletter_id == newsletter_id).offset(skip)
+    if limit is not None:
+        query = query.limit(limit)
+    return query.all()
 
 
 def get_entry_by_message_id(db: Session, message_id: str):
